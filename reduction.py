@@ -1,20 +1,24 @@
 
+import sys
 import csv
 import re
 import networkx as nx
+import numpy as np
 
 ############################### Creating the graph ############################
-#Reads the content of the csv file given as a string-type argument,
+#Reads the content of the csv file whose name is given as a string,
 #then copy it line by line into a list of weighted arcs,
-#given that each line of the csv file encodes an arc.
-def arc_list_from_csv( input_file ):
-    with open( input_file, 'rb' ) as csvfile:
+#given that each line of the csv file, but the first, encodes an arc.
+def arc_list_from_csv( file_name ):
+    #file_name += ".csv"
+    with open( file_name, 'rb' ) as csvfile:
         csvreader = csv.reader(csvfile)
         next(csvreader) #take out the first line of the csv, which is metadata
         arc_list = []
         for row in csvreader:
    	    for elem in row:
 	        arc_list.append( map( int, re.findall( '\d+', elem ) ) )
+	csvfile.close()
     return arc_list
 
 #Returns a weighted digraph out of a list of weighted arcs.
@@ -24,6 +28,16 @@ def graph_from_arc_list( arc_list ):
         G.add_weighted_edges_from(arc_list)
     return G
 
+############################### Saving the resulting graph into a file ########
+#Save a graph to a file: list of edges in the format: 'Source;Target;Weight'   
+def save_graph(G, filename):
+    f = open(filename, 'w')
+    f.write('Source;Target;Weight\n')
+    for src,target in G.edges():
+        w = G.get_edge_data(src,target)['weight']
+        f.write('%s;%s;%s\n' % (src, target,w))
+    f.close()
+
 ############################### Pruning the graph #############################
 #Given a digraph G, returns a pruned version of it, i.e. where at every node 
 #remains none but the fastest out-going edge. 
@@ -31,12 +45,12 @@ def prune( G ):
     #construct the list of the fastest out-edge from each node
     fastest_edge_list = []
     for node in G.nodes():
-        if G.out_edges( node ) != []:
+        if G.out_edges(node) != []:
             fastest = min( G.out_edges( node, data='weight' ), key=lambda x:x[2] )
-            fastest_edge_list.append( fastest )
+            fastest_edge_list.append(fastest)
     #creates and returns the pruned graph out of the list of the fastest edges
     pruned_G = nx.DiGraph()
-    pruned_G.add_weighted_edges_from( fastest_edge_list )
+    pruned_G.add_weighted_edges_from(fastest_edge_list)
     return pruned_G
 
 ############################### Restoring the out edges #######################
@@ -66,31 +80,24 @@ def cycle_in_edges( G, cycle, cycle_edges ):
     G_minus_cycle = G.copy()
     G_minus_cycle.remove_nodes_from(cycle)
     J.remove_edges_from ( G_minus_cycle.edges(data='weight') ) 
-    return [ e for e in J.edges(data='weight') if e[0] not in cycle ]
+    return [e for e in J.edges(data='weight') if e[0] not in cycle]
     
 #Connects the in edges of a cycle to a new node.
-def redirect_in_edges( in_list, new_node ):  
+def redirect( in_list, new_node ):  
     return map( lambda x:(x[0],new_node,x[2]), in_list )
         
 #Given a list and a value, selects from it a sublist for which
 #the first coordinate of its elements matches the value, 
 #then returns the first element of the sublist.
-def sel( list_l, value ):
-    L = [ e for e in list_l if e[0] == value ]
+def sel( liste, value ):
+    L = [edge for edge in liste if edge[0] == value]
     return L[0]
 
 #Returns a renormalization of the weights of the out edges of a cycle,
 #with respect to the restored graph, and connects them to the origin 
 #of the limiting step.
-def renorm_out_edges( cycle_edges, out_edges, value ):
-    k = 0
-    for e in cycle_edges:
-        k = k + 1.0/e[2]
-    cycle_cst = 1 / k
-    out_edge_origin = [ e[0] for e in out_edges ]
-    l = [ e for e in cycle_edges if e[0] in out_edge_origin ] 
-    l_norm = map( lambda x:(x[0], x[1], cycle_cst/x[2]), l )
-    return map( lambda x:(value, x[1], sel(l_norm,x[0])[2] * x[2]), out_edges )
+def renorm( cycle_edges, out_edges, lim_step ):
+    return map( lambda x:( lim_step[0], x[1], x[2] + lim_step[2] - sel(cycle_edges,x[0])[2] ), out_edges )
 
 #Given G and one of its cycle, returns a graph for which the cycle is glued,
 #i.e. supressed and replaced by a new vertex whose label will be this of
@@ -104,8 +111,8 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #with the limiting step, renormalize the out edges 
     #and redirect the in edges
     lim_step = max( cycle_edges, key=lambda x:x[2] )
-    out_edges = renorm_out_edges( cycle_edges, out_list, lim_step[0] )
-    in_edges = redirect_in_edges( in_list, lim_step[0] )
+    out_edges = renorm( cycle_edges, out_list, lim_step )
+    in_edges = redirect( in_list, lim_step[0] )
     #creates the glued graph by taking the restored graph and replacing
     #the vertices of the pruned graph's cycle by a new vertex, named
     #after the vertex at the origin of its limiting step, then
@@ -167,24 +174,33 @@ def unglue( glued_G, G ):
         unglued_graph.add_weighted_edges_from(to_add)
     return unglued_graph
     
+############################### Instance validity check #######################
+def validity_check( G ):
+    L = [e[2] for e in G.edges(data='weight')]
+    return len( set(L) ) == len(L)
+        
 ############################# Main ############################################
-#Print the input digraph
-arc_list = arc_list_from_csv('input.csv')
-input_G = graph_from_arc_list( arc_list )
-print "Input graph is"
-print input_G.edges(data='weight')
 
-#Print the final glued graph
-L = glue(input_G)
-n = len(L)
-glued_G = L[n-1]
-print "final glued graph is"
-print glued_G.edges(data='weight')
-
-#Print the final unglued graph 
-u_G = glued_G
-for i in reversed( range(n-2) ):
-    u_G = unglue( u_G, L[i] )
-print "final unglued graph is"
-print u_G.edges(data='weight')
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print 'usage:'
+        print sys.argv[0] + ' <filename>'
+        sys.exit()
+    filename = sys.argv[1]
+    #input digraph
+    arc_list = arc_list_from_csv(filename)
+    input_G = graph_from_arc_list(arc_list)
+    #final glued graph
+    L = glue(input_G)
+    n = len(L)
+    glued_G = L[n-1]
+    #final unglued graph 
+    u_G = glued_G
+    for i in reversed( range(n-2) ):
+        u_G = unglue( u_G, L[i] )
+    #save u_G into file
+    if validity_check(u_G):
+        save_graph( u_G, 'result' )
+    else:
+        print "Sorry, this instance is not reductible because its reduced form has non sperated reaction speeds"
 
