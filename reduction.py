@@ -17,7 +17,7 @@ def arc_list_from_csv( file_name ):
         arc_list = []
         for row in csvreader:
    	    for elem in row:
-	        arc_list.append( map( int, re.findall( '\d+', elem ) ) )
+	        arc_list.append( map(int,re.findall('\d+',elem)) )
 	csvfile.close()
     return arc_list
 
@@ -46,7 +46,7 @@ def prune( G ):
     fastest_edge_list = []
     for node in G.nodes():
         if G.out_edges(node) != []:
-            fastest = min( G.out_edges( node, data='weight' ), key=lambda x:x[2] )
+            fastest = min( G.out_edges(node,data='weight'), key=lambda x:x[2] )
             fastest_edge_list.append(fastest)
     #creates and returns the pruned graph out of the list of the fastest edges
     pruned_G = nx.DiGraph()
@@ -97,7 +97,8 @@ def sel( liste, value ):
 #with respect to the restored graph, and connects them to the origin 
 #of the limiting step.
 def renorm( cycle_edges, out_edges, lim_step ):
-    return map( lambda x:( lim_step[0], x[1], x[2] + lim_step[2] - sel(cycle_edges,x[0])[2] ), out_edges )
+    return map( lambda x:( lim_step[0], x[1], x[2] + lim_step[2] \
+     - sel(cycle_edges,x[0])[2] ), out_edges )
 
 #Given G and one of its cycle, returns a graph for which the cycle is glued,
 #i.e. supressed and replaced by a new vertex whose label will be this of
@@ -177,8 +178,53 @@ def unglue( glued_G, G ):
 ############################### Instance validity check #######################
 def validity_check( G ):
     L = [e[2] for e in G.edges(data='weight')]
-    return len( set(L) ) == len(L)
-        
+    return len(set(L)) == len(L)
+    
+############################### Dynamic #######################################
+#The right vectors of a reduced digraph are here given in the form of a matrix,
+#where the lines are the edges of the graph and the columns the veritces.
+#Now, for each edge, put a one into the column indexed by its origin node, then
+#via a depth-first search, find its first successor edge in the graph whose 
+#weight is strictly bigger (i.e. slower reaction speed). Then put a -1 at the
+#column indexed by the origin node of this latter edge.
+def right_vector( G ):
+    M = np.zeros( (G.size(),G.order()), int )
+    i = 0
+    for e in G.edges(data='weight'):
+        M[i][e[0]] = 1
+        v = G.get_edge_data(*e)
+        dfs = list( nx.edge_dfs(G,e) )
+        L = [f for f in dfs if G.get_edge_data(*f) > v]
+        if L != []:
+            M[i][L[0][0]] = -1
+        else:
+            M[i][dfs[-1][1]] = -1
+        i += 1
+    return M
+
+#The right vectors of a reduced digraph are here given in the form of a matrix,
+#where the lines are the edges of the graph and the columns the veritces.
+#Now, for each edge, put a one into the column indexed by its origin node, then
+#via a reversed depth-first searched, find the first predecessor edge in the
+#graph whose weight is strictly bigger (i.e. slower reaction speed). Then put a
+#one at the column indexed by the origin node of this latter edge.
+def left_vector( G ):
+    M = np.zeros( (G.size(),G.order()), int )
+    i = 0
+    for e in G.edges(data='weight'):
+        M[i][e[0]] = 1
+        v = G.get_edge_data(*e)
+        H = G.reverse()
+        dfs = list( nx.edge_dfs(H,e[0]) )
+        if dfs != []:
+            for f in dfs:
+                if H.get_edge_data(*f) < v:
+                    M[i][f[1]] = 1
+                else:
+                    break
+        i += 1
+    return M
+
 ############################# Main ############################################
 
 if __name__ == "__main__":
@@ -201,6 +247,11 @@ if __name__ == "__main__":
     #save u_G into file
     if validity_check(u_G):
         save_graph( u_G, 'result' )
+        R = right_vector(u_G)
+        L = left_vector(u_G)
+        print L
     else:
-        print "Sorry, this instance is not reductible because its reduced form has non sperated reaction speeds"
+        print "Sorry, this instance is not reducible because its reduced \
+             form has non separated reaction speeds"
+    
 
