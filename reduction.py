@@ -16,17 +16,15 @@ def arc_list_from_csv( file_name ):
         next(csvreader) #take out the first line of the csv, which is metadata
         arc_list = []
         for row in csvreader:
-   	    for elem in row:
-	        arc_list.append( map(int,re.findall('\d+',elem)) )
-	csvfile.close()
+            for elem in row:
+                arc_list.append( map(int,re.findall('\d+',elem)) )
+    csvfile.close()
     return arc_list
 
 #Returns a weighted digraph out of a list of weighted arcs.
 def graph_from_arc_list( arc_list ):
     G = nx.DiGraph()
-    for arc in arc_list:
-        G.add_weighted_edges_from(arc_list)
-    return G
+    return G.add_weighted_edges_from(arc_list)
 
 ############################### Saving the resulting graph into a file ########
 #Save a graph to a file: list of edges in the format: 'Source;Target;Weight'   
