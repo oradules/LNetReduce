@@ -1,7 +1,7 @@
+from __future__ import print_function
 
 import sys
 import csv
-import re
 import networkx as nx
 import numpy as np
 
@@ -12,19 +12,19 @@ import numpy as np
 def arc_list_from_csv( file_name ):
     #file_name += ".csv"
     with open( file_name, 'rb' ) as csvfile:
-        csvreader = csv.reader(csvfile)
+        csvreader = csv.reader(csvfile, delimiter=';')
         next(csvreader) #take out the first line of the csv, which is metadata
         arc_list = []
         for row in csvreader:
-            for elem in row:
-                arc_list.append( map(int,re.findall('\d+',elem)) )
+            arc_list.append( map(int,row[:3]) )
     csvfile.close()
     return arc_list
 
 #Returns a weighted digraph out of a list of weighted arcs.
 def graph_from_arc_list( arc_list ):
     G = nx.DiGraph()
-    return G.add_weighted_edges_from(arc_list)
+    G.add_weighted_edges_from(arc_list)
+    return G
 
 ############################### Saving the resulting graph into a file ########
 #Save a graph to a file: list of edges in the format: 'Source;Target;Weight'   
@@ -227,8 +227,8 @@ def left_vector( G ):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print 'usage:'
-        print sys.argv[0] + ' <filename>'
+        print( 'usage:' )
+        print( sys.argv[0] + ' <filename>' )
         sys.exit()
     filename = sys.argv[1]
     #input digraph
@@ -247,9 +247,8 @@ if __name__ == "__main__":
         save_graph( u_G, 'result' )
         R = right_vector(u_G)
         L = left_vector(u_G)
-        print L
+        print( L )
     else:
-        print "Sorry, this instance is not reducible because its reduced \
-             form has non separated reaction speeds"
-    
+        print( "Sorry, this instance is not reducible because its reduced \
+             form has non separated reaction speeds" )
 
