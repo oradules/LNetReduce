@@ -222,6 +222,13 @@ def left_vector( G ):
         i += 1
     return M
 
+def show_graph(G, label=False):
+    if label: print(label)
+    print(G.nodes())
+    for s,t,w in G.edges(data='weight'):
+        print( s,t,w )
+    print()
+
 ############################# Main ############################################
 
 if __name__ == "__main__":
