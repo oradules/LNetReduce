@@ -78,11 +78,11 @@ def cycle_in_edges( G, cycle, cycle_edges ):
     G_minus_cycle.remove_nodes_from(cycle)
     J.remove_edges_from ( G_minus_cycle.edges(data='weight') ) 
     return [e for e in J.edges(data='weight') if e[0] not in cycle]
-    
+
 #Connects the in edges of a cycle to a new node.
 def redirect( in_list, new_node ):
     return map( lambda x:(x[0],new_node,x[2]), in_list )
-        
+
 #Given a list and a value, selects from it a sublist for which
 #the first coordinate of its elements matches the value, 
 #then returns the first element of the sublist.
@@ -129,7 +129,7 @@ def glue_graph( pruned_G, restored_G ):
     for cycle in cycles_list:
         glued_G = glue_cycle( pruned_G, glued_G, cycle )
     return glued_G
-    
+
 #Compute the pruned graph of G then restore the out edges of its cycles,
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
