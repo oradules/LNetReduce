@@ -10,8 +10,7 @@ import numpy as np
 #then copy it line by line into a list of weighted arcs,
 #given that each line of the csv file, but the first, encodes an arc.
 def arc_list_from_csv( file_name ):
-    #file_name += ".csv"
-    with open( file_name, 'rb' ) as csvfile:
+    with open(file_name) as csvfile:
         csvreader = csv.reader(csvfile, delimiter=';')
         next(csvreader) #take out the first line of the csv, which is metadata
         arc_list = []
@@ -81,7 +80,7 @@ def cycle_in_edges( G, cycle, cycle_edges ):
     return [e for e in J.edges(data='weight') if e[0] not in cycle]
     
 #Connects the in edges of a cycle to a new node.
-def redirect( in_list, new_node ):  
+def redirect( in_list, new_node ):
     return map( lambda x:(x[0],new_node,x[2]), in_list )
         
 #Given a list and a value, selects from it a sublist for which
@@ -122,7 +121,7 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     glued_G.add_weighted_edges_from(out_edges)
     glued_G.add_weighted_edges_from(in_edges)
     return glued_G
-  
+
 #Returns the glued graph obtained by gluing every cycle of the pruned graph.
 def glue_graph( pruned_G, restored_G ):
     glued_G = restored_G.copy()
@@ -135,7 +134,7 @@ def glue_graph( pruned_G, restored_G ):
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
 #together with all its successive glued graphs (but not pruned).
-def glue( G ):     
+def glue( G ):
     L = []
     i = 0
     L.append(G)
@@ -154,7 +153,7 @@ def glued_nodes_list( G ):
         if node[1] != {}:
             L.append(node[0])
     return L
-    
+
 #Given a glued graph and its orginal graph, retuns the orginal graph where
 #the limiting step of every cycle is deleted. Note that the edges going 
 #in and out of those cycles are already redirected and renormalized.
@@ -172,12 +171,12 @@ def unglue( glued_G, G ):
         to_add = [e for e in glued_G.edges(data='weight') if e[0]==lim_step[0]]
         unglued_graph.add_weighted_edges_from(to_add)
     return unglued_graph
-    
+
 ############################### Instance validity check #######################
 def validity_check( G ):
     L = [e[2] for e in G.edges(data='weight')]
     return len(set(L)) == len(L)
-    
+
 ############################### Dynamic #######################################
 #The right vectors of a reduced digraph are here given in the form of a matrix,
 #where the lines are the edges of the graph and the columns the veritces.
