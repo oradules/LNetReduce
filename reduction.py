@@ -117,7 +117,8 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #adding its renormalized out edges together with the redirected in edges
     glued_G = restored_G.copy()
     glued_G.remove_nodes_from(cycle)
-    glued_G.add_node( lim_step[0], cycle=cycle_edges, out_edges=in_list )
+    glued_G.add_node( lim_step[0], cycle=cycle_edges, out_edges=in_list,
+                      glued_in=in_list, glued_out=out_list )
     glued_G.add_weighted_edges_from(out_edges)
     glued_G.add_weighted_edges_from(in_edges)
     return glued_G
@@ -154,23 +155,62 @@ def glued_nodes_list( G ):
             L.append(node[0])
     return L
 
-#Given a glued graph and its orginal graph, retuns the orginal graph where
-#the limiting step of every cycle is deleted. Note that the edges going 
-#in and out of those cycles are already redirected and renormalized.
-def unglue( glued_G, G ):
-    unglued_graph = G.copy()
-    cycles = nx.get_node_attributes( glued_G, 'cycle' )
-    L = glued_nodes_list(glued_G)
-    for i in L:
-        cycle_edges = cycles[i]
-        cycle = [e[0] for e in cycle_edges]
-        lim_step = max( cycle_edges, key=lambda x:x[2] )
-        unglued_graph.remove_edge(*lim_step[:2])
-        to_remove = cycle_out_edges( unglued_graph, cycle, cycle_edges )
-        unglued_graph.remove_edges_from(to_remove)
-        to_add = [e for e in glued_G.edges(data='weight') if e[0]==lim_step[0]]
-        unglued_graph.add_weighted_edges_from(to_add)
-    return unglued_graph
+# Unglue a graph step by step. At each step:
+# * restore cycle edges, except the limiting one (slowest, i.e. with highest weight)
+# * edges going out of the unglued cycles are rerouted to go out of the limiting node
+# * edges entering the cycle should enter on the same node as in the original graph
+def unglue_stack( stack ):
+    prev = stack.pop()
+    G = prev.copy()
+    while stack:
+        cycles = nx.get_node_attributes( prev, 'cycle' )
+        incomings = nx.get_node_attributes( prev, 'glued_in' )
+        outgoings = nx.get_node_attributes( prev, 'glued_out' )
+        L = glued_nodes_list(prev)
+        print( "ungluing:", cycles )
+        prev = stack.pop()
+        removed_nodes = [ n for n in L ]
+        added_edges = []
+        for i in L:
+            # restore the glued cycle, without the limiting step
+            cycle_edges = cycles[i]
+            cycle_incoming = incomings[i]
+            cycle_outgoing = outgoings[i]
+            cur_outgoing = G.out_edges(i, data='weight')
+            cur_incoming = G.in_edges(i, data='weight')
+            cycle = [e[0] for e in cycle_edges]
+            lim_step = max( cycle_edges, key=lambda x:x[2] )
+            lim_node = lim_step[0]
+            added_edges += [ e for e in cycle_edges if e != lim_step ]
+            
+            print('    %s (lim:%s)  ' % (i, lim_node), added_edges)
+            
+            # Keep the current outgoing arcs (going out of the limiting node)
+            if i == lim_node:
+                added_edges += cur_outgoing
+            else: # should not happen: the cylce is glued on the limiting node
+                print( 'REDIRECT OUTGOING' )
+                for edge in cur_outgoing:
+                    added_edges.append( (lim_node, edge[1], edge[2]) )
+            
+            # Restore incoming arcs: merge current and before gluing information
+            print('    Restore incoming edges', cur_incoming, cycle_incoming)
+            for e in cur_incoming:
+                cur_s, cur_t, cur_w = e
+                cur_w = cur_w['weight']
+                for glued_s, glued_t, glued_w in cycle_incoming:
+                    if glued_s == cur_s and glued_w == cur_w:
+                        # FIXME: if the source is part of a glued cycle, it may be wrong
+                        # in this case it should be safe to use cur_s instead of glued_s
+                        # (requires updating the surrounding if and performing some extra tests)
+                        added_edges.append( (cur_s, glued_t, glued_w) )
+                        break
+            
+            print('    Ready to unglue:', removed_nodes, added_edges)
+            G.remove_nodes_from(removed_nodes)
+            G.add_weighted_edges_from( added_edges )
+    
+    return G
 
 ############################### Instance validity check #######################
 def validity_check( G ):
@@ -242,15 +282,20 @@ if __name__ == "__main__":
     input_G = graph_from_arc_list(arc_list)
     #final glued graph
     L = glue(input_G)
-    n = len(L)
-    glued_G = L[n-1]
-    #final unglued graph 
-    u_G = glued_G
-    for i in reversed( range(n-2) ):
-        u_G = unglue( u_G, L[i] )
+    print('Glued stack:')
+    i = 0
+    for curG in L:
+        show_graph(curG, 'Step %s' % i)
+        i += 1
+    print()
+    
+    n = len(L)-1
+    glued_G = L[n]
+    #final unglued graph
+    u_G = unglue_stack(L)
     #save u_G into file
     if validity_check(u_G):
-        save_graph( u_G, 'result' )
+        save_graph( u_G, '%s_reduced.tsv' % filename)
         R = right_vector(u_G)
         L = left_vector(u_G)
         print( L )
