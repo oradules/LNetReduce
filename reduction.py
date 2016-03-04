@@ -109,8 +109,8 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #with the limiting step, renormalize the out edges 
     #and redirect the in edges
     lim_step = max( cycle_edges, key=lambda x:x[2] )
-    out_edges = renorm( cycle_edges, out_list, lim_step )
-    in_edges = redirect( in_list, lim_step[0] )
+    out_edges = select_unique_edges( renorm( cycle_edges, out_list, lim_step ) )
+    in_edges = select_unique_edges( redirect( in_list, lim_step[0] ) )
     #creates the glued graph by taking the restored graph and replacing
     #the vertices of the pruned graph's cycle by a new vertex, named
     #after the vertex at the origin of its limiting step, then
@@ -122,6 +122,19 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     glued_G.add_weighted_edges_from(out_edges)
     glued_G.add_weighted_edges_from(in_edges)
     return glued_G
+
+def select_unique_edges(edges):
+    """Take a list of edges, detect multiarcs and select the one with lowest weight.
+    This is useful When restoring arcs to/from a glued cycle as networkx will only keep the last one"""
+    d = {}
+    for s,t,w in edges:
+        if (s,t) in d and d[(s,t)] < w:
+            continue
+        d[(s,t)] = w
+    edges = []
+    for s,t in d:
+        edges.append( (s,t,d[(s,t)]) )
+    return edges
 
 #Returns the glued graph obtained by gluing every cycle of the pruned graph.
 def glue_graph( pruned_G, restored_G ):
@@ -185,7 +198,9 @@ def unglue_stack( stack ):
             
             print('    %s (lim:%s)  ' % (i, lim_node), added_edges)
             
-            # Keep the current outgoing arcs (going out of the limiting node)
+            # Keep the current outgoing edges (going out of the limiting node)
+            # only if they do not go toward another glued cycle (avoiding duplicating it)
+            cur_outgoing = [ e for e in cur_outgoing if e[1] not in L ]
             if i == lim_node:
                 added_edges += cur_outgoing
             else: # should not happen: the cylce is glued on the limiting node
@@ -205,10 +220,10 @@ def unglue_stack( stack ):
                         # (requires updating the surrounding if and performing some extra tests)
                         added_edges.append( (cur_s, glued_t, glued_w) )
                         break
-            
-            print('    Ready to unglue:', removed_nodes, added_edges)
-            G.remove_nodes_from(removed_nodes)
-            G.add_weighted_edges_from( added_edges )
+        
+        print('    Ready to unglue:', removed_nodes, added_edges)
+        G.remove_nodes_from(removed_nodes)
+        G.add_weighted_edges_from( added_edges )
     
     return G
 
