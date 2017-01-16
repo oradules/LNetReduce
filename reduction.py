@@ -244,9 +244,9 @@ def right_vector( G ):
     i = 0
     for e in G.edges(data='weight'):
         M[i][e[0]] = 1
-        v = G.get_edge_data(*e)
+        v = G.get_edge_data(*e)['weight']
         dfs = list( nx.edge_dfs(G,e) )
-        L = [f for f in dfs if G.get_edge_data(*f) > v]
+        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > v]
         if L != []:
             M[i][L[0][0]] = -1
         else:
@@ -265,12 +265,12 @@ def left_vector( G ):
     i = 0
     for e in G.edges(data='weight'):
         M[i][e[0]] = 1
-        v = G.get_edge_data(*e)
+        v = G.get_edge_data(*e)['weight']
         H = G.reverse()
         dfs = list( nx.edge_dfs(H,e[0]) )
         if dfs != []:
             for f in dfs:
-                if H.get_edge_data(*f) < v:
+                if H.get_edge_data(*f)['weight'] < v:
                     M[i][f[1]] = 1
                 else:
                     break
