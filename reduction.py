@@ -1,50 +1,30 @@
-from __future__ import print_function
-
 import sys
 import csv
 import networkx as nx
 import numpy as np
+import pandas as pd
 
-############################### Creating the graph ############################
-#Reads the content of the csv file whose name is given as a string,
-#then copy it line by line into a list of weighted arcs,
-#given that each line of the csv file, but the first, encodes an arc.
-def arc_list_from_csv( file_name ):
-    with open(file_name) as csvfile:
-        csvreader = csv.reader(csvfile, delimiter=';')
-        next(csvreader) #take out the first line of the csv, which is metadata
-        arc_list = []
-        for row in csvreader:
-            arc_list.append( map(int,row[:3]) )
-    csvfile.close()
-    return arc_list
+def load( filename):
+    "Load a weighted graph from a file where each line encodes an arc as a triplet (source;target;weight)."
+    df = pd.read_csv(filename, delimiter=';')
+    return nx.from_pandas_edgelist(df, edge_attr='weight', create_using=nx.DiGraph)
 
-#Returns a weighted digraph out of a list of weighted arcs.
-def graph_from_arc_list( arc_list ):
-    G = nx.DiGraph()
-    G.add_weighted_edges_from(arc_list)
-    return G
-
-############################### Saving the resulting graph into a file ########
-#Save a graph to a file: list of edges in the format: 'Source;Target;Weight'   
 def save_graph(G, filename):
-    f = open(filename, 'w')
-    f.write('Source;Target;Weight\n')
-    for src,target in G.edges():
-        w = G.get_edge_data(src,target)['weight']
-        f.write('%s;%s;%s\n' % (src, target,w))
-    f.close()
+    "Save a graph to a file: list of edges in the format: 'source,target,weight'"
+    with open(filename, 'wb') as f:
+        f.write(b'source;target;weight\n')
+        nx.readwrite.edgelist.write_weighted_edgelist(G, f, delimiter=';')
 
-############################### Pruning the graph #############################
-#Given a digraph G, returns a pruned version of it, i.e. where at every node 
-#remains none but the fastest out-going edge. 
 def prune( G ):
-    #construct the list of the fastest out-edge from each node
+    """Given a digraph G, construct and return a pruned version of G
+       keeping only the single fastest out-going edge for each node""" 
     fastest_edge_list = []
     for node in G.nodes():
-        if G.out_edges(node) != []:
-            fastest = min( G.out_edges(node,data='weight'), key=lambda x:x[2] )
+        edges = G.out_edges(node,data='weight')
+        if edges:
+            fastest = min( edges, key=lambda x:x[2] )
             fastest_edge_list.append(fastest)
+
     #creates and returns the pruned graph out of the list of the fastest edges
     pruned_G = nx.DiGraph()
     pruned_G.add_weighted_edges_from(fastest_edge_list)
@@ -212,7 +192,6 @@ def unglue_stack( stack ):
             print('    Restore incoming edges', cur_incoming, cycle_incoming)
             for e in cur_incoming:
                 cur_s, cur_t, cur_w = e
-                cur_w = cur_w['weight']
                 for glued_s, glued_t, glued_w in cycle_incoming:
                     if glued_s == cur_s and glued_w == cur_w:
                         # FIXME: if the source is part of a glued cycle, it may be wrong
@@ -284,6 +263,10 @@ def show_graph(G, label=False):
         print( s,t,w )
     print()
 
+def reduce_graph( G ):
+    return unglue_stack( glue(G) )
+
+
 ############################# Main ############################################
 
 if __name__ == "__main__":
@@ -291,30 +274,21 @@ if __name__ == "__main__":
         print( 'usage:' )
         print( sys.argv[0] + ' <filename>' )
         sys.exit()
+
     filename = sys.argv[1]
-    #input digraph
-    arc_list = arc_list_from_csv(filename)
-    input_G = graph_from_arc_list(arc_list)
-    #final glued graph
-    L = glue(input_G)
-    print('Glued stack:')
-    i = 0
-    for curG in L:
-        show_graph(curG, 'Step %s' % i)
-        i += 1
-    print()
-    
-    n = len(L)-1
-    glued_G = L[n]
-    #final unglued graph
-    u_G = unglue_stack(L)
-    #save u_G into file
-    if validity_check(u_G):
-        save_graph( u_G, '%s_reduced.tsv' % filename)
-        R = right_vector(u_G)
-        L = left_vector(u_G)
-        print( L )
-    else:
+    input_G = load(filename)
+
+    try:
+        u_G = reduce_graph( input_G )
+    except:
         print( "Sorry, this instance is not reducible because its reduced \
              form has non separated reaction speeds" )
+        sys.exit()
+
+    save_graph( u_G, '%s_reduced.tsv' % filename)
+
+    # Compute the right and left vectors
+    R = right_vector(u_G)
+    L = left_vector(u_G)
+    print( L )
 

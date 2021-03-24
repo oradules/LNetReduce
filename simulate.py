@@ -19,7 +19,7 @@ def simulate(filename, timescale):
 
     # matrix of reactions
     S=np.zeros( (n,nr) )
-    for i in xrange(nr):
+    for i in range(nr):
         S[source[i],i] = -1
         S[target[i],i] =  1
 
@@ -29,8 +29,8 @@ def simulate(filename, timescale):
     # construct the update function
     def dx_dt(x,t=0):
         r = np.zeros( (nr,) )
-        for i in xrange(nr):
-            for j in xrange(n):
+        for i in range(nr):
+            for j in range(n):
                 if S[j,i] == -1:
                     r[i] = x[j] * k[i]
         return np.dot(S,r)
@@ -52,7 +52,7 @@ def plot_trace(trace, name, time=None, labels=None, logx=False, logy=True, ylabe
     f1 = plt.figure()
     idx=0
     for data in trace:
-        style = styles[ idx / 7 ]
+        style = styles[ int(idx / 7) ]
         if labels: label = labels[idx]
         else: label="x%s" % (idx+1)
         plt.plot(time, data, label=label, linestyle=style)
