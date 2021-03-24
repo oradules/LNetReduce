@@ -3,10 +3,10 @@ import numpy as np
 import pylab as plt
 from scipy import integrate
 
+def load(filename):
+    return np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int)
 
-def simulate(filename, timescale):
-    a = np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int)
-
+def simulate(a, timescale):
     orders=a[:,2]
     source=a[:,0]
     target=a[:,1]
@@ -43,7 +43,7 @@ def simulate(filename, timescale):
     return integrate.odeint(dx_dt, x0, t, mxstep=5000)
 
 
-def plot_trace(trace, name, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
+def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
     if not time:
@@ -66,10 +66,18 @@ def plot_trace(trace, name, time=None, labels=None, logx=False, logy=True, ylabe
     plt.xlabel('time')
     plt.ylabel(ylabel)
     if title: plt.title(title)
-    f1.savefig('%s.png' % name, bbox_extra_artists=(lgd,), bbox_inches='tight')
-    plt.close(f1)
+    if name:
+        f1.savefig('%s.png' % name, bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.close(f1)
+    else:
+        return plt
 
 
+def simulate_and_plot(filename, timescale, save=False):
+    a = load(filename)
+    if not save: filename = None
+    X = simulate(a, timescale)
+    plot_trace(X, filename, logy=False, logx=True)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -79,6 +87,5 @@ if __name__ == "__main__":
     
     filename = sys.argv[1]
     timescale = int(sys.argv[2])
-    X = simulate(filename, timescale)
-    plot_trace(X, filename, logy=False, logx=True)
+    simulate_and_plot(filename, timescale, save=True)
 
