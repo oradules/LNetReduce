@@ -51,17 +51,11 @@ class Interface(Frame):
 
 
 
-
 		self.frame1=LabelFrame(self,relief='groove',bg=self.color,bd=5,text="Starting model",font=("Helvetica",14))
 		self.frame1.pack(fill=BOTH, pady=(10,30),padx=40)
-		#self.frame1.grid(row=0, column=2, columnspan=3, )
 
 
-		#self.inputFile_label = Label(self.frame1, text="Vizualise :",font=("Helvetica"),bg=self.color)
-		#self.inputFile_label.grid(row=1,column=0,pady=10,padx=10)		
-
-
-		self.charge_network = Button(self.frame1, text="Vizualise network", command=self.cliquerResult,font=("Helvetica"),bg=self.color_button,state=DISABLED)
+		self.charge_network = Button(self.frame1, text="Vizualise network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
 		self.charge_network.grid(row=1, column=1,pady=(20,10),padx=40)
 
 		
@@ -73,8 +67,6 @@ class Interface(Frame):
 		self.frame4=Label(self,bg=self.color,bd=5)
 		self.frame4.pack(fill=BOTH, pady=(10,30),padx=40)
 
-		#self.start_label=Label(self.frame4, text="Start :",font=("Helvetica", 12))
-		#self.start_label.pack()
 
 		self.reduce = Button(self.frame4, text="Reduce model", command=self.cliquerResult,font=("Helvetica", 12,"bold"),bg=self.color_button,state=DISABLED)
 		self.reduce.pack(pady=20,padx=20)
@@ -87,16 +79,15 @@ class Interface(Frame):
 		self.frame2.pack(side="bottom",fill=BOTH,pady=(0,50),padx=40)
 		#self.frame2.grid(row=7, column=2, columnspan=3, )
 
-		#self.inputFile_label = Label(self.frame2, text="Vizualise :",font=("Helvetica"),bg=self.color)
-		#self.inputFile_label.grid(row=3,column=0,pady=10,padx=10)		
 
-		self.charge_network_reduced = Button(self.frame2, text="Vizualise network", command=self.cliquerResult,font=("Helvetica"),bg=self.color_button,state=DISABLED)
+
+		self.charge_network_reduced = Button(self.frame2, text="Vizualise network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
 		self.charge_network_reduced.grid(row=1, column=1,pady=(20,10),padx=40)
-		#self.charge_network_reduced.pack(pady=(20,10))
+		
 		
 		self.charge_reduced_simulation = Button(self.frame2, text="Simulation", command=self.cliquerSimulationReduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
 		self.charge_reduced_simulation.grid(row=2, column=1,pady=(10,20),padx=40,sticky=W)
-		#self.charge_reduced_simulation.pack(pady=(10,20))
+
 
 		################################################################################################################
 		# Defined button functions
@@ -119,8 +110,6 @@ class Interface(Frame):
 
 
 		self.resultInit=Toplevel(master=fenetre)
-
-
 
 
 		self.resultInit.frameOption=Frame(master=self.resultInit)
@@ -154,17 +143,17 @@ class Interface(Frame):
 		imageo=Image.open(filename+"_reduced.tsv.png")
 
 		resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-		#self.result.canva=Canvas(master=self.result.frameImage,width=resultsimu.width(),height=resultsimu.height())
+		
 		self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
 		self.resultInit.canva.image=resultsimu
-		#self.result.canva.pack(fill=BOTH)
+		
 
 
 		
 		
-		# Load simulation image
+	# Reduce the model
 	def cliquerResult(self):
-		# Reduce the model
+		
 		os.system("python3 reduction.py "+filename)
 		#able network and simulation vizualisation
 		self.charge_network_reduced.configure(state=NORMAL)
@@ -182,14 +171,12 @@ class Interface(Frame):
 		self.result.frameOption=Frame(master=self.result)
 		self.result.frameOption.pack(fill=BOTH)
 
-		self.result.layoutOption=Label(master=self.result.frameOption,text="Timescale :")
-		self.result.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
+		self.result.TimescaleOption=Label(master=self.result.frameOption,text="Timescale :")
+		self.result.TimescaleOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
 		self.result.Entry_number=Entry(master=self.result.frameOption,textvariable="Timescale_value")
 		self.result.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
-		#Timescale_value=Entry_number.get()
-		print (Timescale_value)
 
 		self.result.GoButton=Button(master=self.result.frameOption, text="Start",command=self.cliquerChangeTimescaleReduced)
 		self.result.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
@@ -206,23 +193,59 @@ class Interface(Frame):
 
 
 	def cliquerChangeTimescaleReduced(self):
-		print ("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
 		os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
 		imageo=Image.open(filename+"_reduced.tsv.png")
-
 		resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-		#self.result.canva=Canvas(master=self.result.frameImage,width=resultsimu.width(),height=resultsimu.height())
 		self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
 		self.result.canva.image=resultsimu
-		#self.result.canva.pack(fill=BOTH)
+
+	def cliquerNetwork(self):
+		global Layout
+		LayoutValue='dot'
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
+		self.networkInitWindow=Toplevel(master=fenetre)
+		
+
+		self.networkInitWindow.frameOption=Frame(master=self.networkInitWindow)
+		self.networkInitWindow.frameOption.pack(fill=BOTH)
+
+		self.networkInitWindow.layoutOption=Label(master=self.networkInitWindow.frameOption,text="Layout :")
+		self.networkInitWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
+		self.networkInitWindow.Entry_number=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="Layout",values=["neato","dot","twopi","circo","fdp","nop"])
+		self.networkInitWindow.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
+
+
+		self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout)
+		self.networkInitWindow.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+
+		self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
+		self.networkInitWindow.frameImage.pack()
+
+		imageo=Image.open(filename+"_reduced.tsv.png")
+		resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+		self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+		self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+		self.networkInitWindow.canva.image=resultNetwork
+		self.networkInitWindow.canva.pack(fill=BOTH)
+
+
+	def cliquerChangeLayout(self):
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
+		imageo=Image.open(filename+"_reduced.tsv.png")
+		resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+		self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+		self.networkInitWindow.canva.image=resultNetwork
+
+
+
+		
 
 
 	# Checker le format du model
 	def CheckModel(self):
 		print ("check model")
-
 
 
 	
