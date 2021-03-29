@@ -14,9 +14,9 @@ class Interface(Frame):
 	"""Notre fenêtre principale.
 	Tous les widgets sont stockés comme attributs de cette fenêtre."""
 	
-	def __init__(self, fenetre,bg='#33FFD8', **kwargs):
+	def __init__(self, fenetre,bg='#ADB7FA', **kwargs):
 		self.color=StringVar()
-		self.color='#33FFD8'
+		self.color='#ADB7FA'
 		self.color_button='#334DFF'
 
 		Frame.__init__(self, fenetre, width=768, height=576,bg=self.color, **kwargs)
@@ -51,7 +51,7 @@ class Interface(Frame):
 		self.inputFile_label = Label(self.frame1, text="Vizualise :",font=("Helvetica"),bg=self.color)
 		self.inputFile_label.grid(row=3,column=0,pady=10,padx=10)		
 
-		self.charge_network = Button(self.frame1, text="Network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
+		self.charge_network = Button(self.frame1, text="Network", command=self.cliquerResult,font=("Helvetica"),bg=self.color_button,state=DISABLED)
 		self.charge_network.grid(row=3, column=1,pady=20,padx=20)
 
 		
