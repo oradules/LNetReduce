@@ -46,7 +46,7 @@ def simulate(a, timescale):
 def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
-    if not time:
+    if time is None:
         time = np.arange(len(trace))
     trace = trace.transpose()
     f1 = plt.figure()
@@ -54,7 +54,7 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
     for data in trace:
         style = styles[ int(idx / 7) ]
         if labels: label = labels[idx]
-        else: label="x%s" % (idx+1)
+        else: label="x%s" % (idx)
         plt.plot(time, data, label=label, linestyle=style)
         if logx:
             plt.xscale('log')
