@@ -30,7 +30,7 @@ class Interface(Frame):
 		self.pack()
 
 
-		self.title_label = Label(self, text="Monomolecular reduction tool, \nthis tool reduce the model based on 4 reduction rules",font=("Helvetica",14),bg=self.color)
+		self.title_label = Label(self, text="LNetReduce: \n tool for reducing linear reaction networks \n with separated time scales",font=("Helvetica",14),bg=self.color)
 		self.title_label.pack(pady=30,padx=30)
 
 		################################################################################################################
@@ -110,6 +110,7 @@ class Interface(Frame):
 
 
 		self.resultInit=Toplevel(master=fenetre)
+		self.resultInit.title("Initial model simulation")
 
 
 		self.resultInit.frameOption=Frame(master=self.resultInit)
@@ -166,6 +167,7 @@ class Interface(Frame):
 		os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
 		print ("python3 simulate.py "+filename+"_reduced.tsv 5")
 		self.result=Toplevel(master=fenetre)
+		self.result.title("Reduced model simulation")
 		
 
 		self.result.frameOption=Frame(master=self.result)
@@ -204,6 +206,7 @@ class Interface(Frame):
 		LayoutValue='dot'
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
 		self.networkInitWindow=Toplevel(master=fenetre)
+		self.networkInitWindow.title("Initial network")
 		
 
 		self.networkInitWindow.frameOption=Frame(master=self.networkInitWindow)
