@@ -3,6 +3,9 @@ import csv
 import networkx as nx
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import pygraphviz as pgv
+#import pydot
 
 def load( filename):
     "Load a weighted graph from a file where each line encodes an arc as a triplet (source;target;weight)."
@@ -266,17 +269,46 @@ def show_graph(G, label=False):
 def reduce_graph( G ):
     return unglue_stack( glue(G) )
 
+def draw_graph( G , file, drawformat, layout):
+    AG = nx.nx_agraph.to_agraph(G)
+    LE = AG.edges()
+    for a,b in LE:
+        AG.remove_edge(u=a,v=b)
+    for c,d,w in G.edges(data=True):
+        AG.add_edge(u=c,v=d, label=w['weight'])
+    AG.draw(path=file,format=drawformat,prog=layout,args="-Nheight=0.3 -Nwidth=0.3")
+
 
 ############################# Main ############################################
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print( 'usage:' )
-        print( sys.argv[0] + ' <filename>' )
-        sys.exit()
+#if __name__ == "__main__":
+#    if len(sys.argv) != 2:
+#        print( 'usage:' )
+#        print( sys.argv[0] + ' <filename>' )
+#        sys.exit()
 
-    filename = sys.argv[1]
+#    filename = sys.argv[1]
+#    input_G = load(filename)
+#    draw_graph(input_G,"input_model_graph.png",'png','dot')
+
+#    try:
+#        u_G = reduce_graph( input_G )
+#    except:
+#        print( "Sorry, this instance is not reducible because its reduced \
+#             form has non separated reaction speeds" )
+#        sys.exit()
+
+#    draw_graph(u_G, "reduced_graph.png", 'png', 'dot')
+#    save_graph( u_G, '%s_reduced.tsv' % filename)
+
+#    # Compute the right and left vectors
+#    R = right_vector(u_G)
+#    L = left_vector(u_G)
+#    print( L )
+
+def reductionpy(filename):
     input_G = load(filename)
+    draw_graph(input_G,"input_model_graph.png",'png','dot')
 
     try:
         u_G = reduce_graph( input_G )
@@ -285,10 +317,12 @@ if __name__ == "__main__":
              form has non separated reaction speeds" )
         sys.exit()
 
+    draw_graph(u_G, "reduced_graph.png", 'png', 'dot')
     save_graph( u_G, '%s_reduced.tsv' % filename)
 
     # Compute the right and left vectors
     R = right_vector(u_G)
     L = left_vector(u_G)
     print( L )
-
+    graphs = [input_G,u_G]
+    return graphs

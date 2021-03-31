@@ -79,13 +79,16 @@ def simulate_and_plot(filename, timescale, save=False):
     X = simulate(a, timescale)
     plot_trace(X, filename, logy=False, logx=True)
 
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print( 'usage:' )
-        print( sys.argv[0] + ' <filename> <timescale>' )
-        sys.exit()
+#if __name__ == "__main__":
+#    if len(sys.argv) != 3:
+#        print( 'usage:' )
+#        print( sys.argv[0] + ' <filename> <timescale>' )
+#        sys.exit()
     
-    filename = sys.argv[1]
-    timescale = int(sys.argv[2])
-    simulate_and_plot(filename, timescale, save=True)
+#    filename = sys.argv[1]
+#    timescale = int(sys.argv[2])
+#    simulate_and_plot(filename, timescale, save=True)
 
+def simulatepy(_filename, _timescale):
+    timescale = int(_timescale)
+    simulate_and_plot(_filename, timescale, save=True)
