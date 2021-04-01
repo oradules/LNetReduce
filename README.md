@@ -6,7 +6,7 @@ Windows:
 
 1. Install Python 
     
-    1. Yollow this [guide](https://docs.python.org/3/using/windows.html) with the following steps
+    1. Follow this [guide](https://docs.python.org/3/using/windows.html) with the following steps
 
         1. Download Python [here](https://www.python.org/downloads/)
         2. Choose "customize installation" and if you don't already have Python in your PATH, check "add Python X.X to PATH". Then choose a directory for your Python installation, it is recommended to intall it in a root to **avoid space in the path directory**. Make sure that the pip installation is checked. Check "Enable Win32 long paths".
