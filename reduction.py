@@ -308,7 +308,7 @@ def draw_graph( G , file, drawformat, layout):
 
 def reductionpy(filename):
     input_G = load(filename)
-    draw_graph(input_G,"input_model_graph.png",'png','dot')
+    #draw_graph(input_G,"input_model_graph.png",'png','dot')
 
     try:
         u_G = reduce_graph( input_G )
@@ -317,7 +317,7 @@ def reductionpy(filename):
              form has non separated reaction speeds" )
         sys.exit()
 
-    draw_graph(u_G, "reduced_graph.png", 'png', 'dot')
+    #draw_graph(u_G, "reduced_graph.png", 'png', 'dot')
     save_graph( u_G, '%s_reduced.tsv' % filename)
 
     # Compute the right and left vectors

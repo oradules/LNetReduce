@@ -5,6 +5,8 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from os.path import basename
 import os
+from simulate import *
+from reduction import *
 
 
 
@@ -30,7 +32,7 @@ class Interface(Frame):
 		self.pack()
 
 
-		self.title_label = Label(self, text="Monomolecular reduction tool, \nthis tool reduce the model based on 4 reduction rules",font=("Helvetica",14),bg=self.color)
+		self.title_label = Label(self, text="LNetReduce: \n tool for reducing linear reaction networks \n with separated time scales",font=("Helvetica",14),bg=self.color)
 		self.title_label.pack(pady=30,padx=30)
 
 		################################################################################################################
@@ -50,7 +52,7 @@ class Interface(Frame):
 		self.labelFile.grid(row=1,column=2)
 
 
-
+		#starting model block
 		self.frame1=LabelFrame(self,relief='groove',bg=self.color,bd=5,text="Starting model",font=("Helvetica",14))
 		self.frame1.pack(fill=BOTH, pady=(10,30),padx=40)
 
@@ -81,7 +83,7 @@ class Interface(Frame):
 
 
 
-		self.charge_network_reduced = Button(self.frame2, text="Vizualise network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
+		self.charge_network_reduced = Button(self.frame2, text="Vizualise network", command=self.cliquerNetwork_reduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
 		self.charge_network_reduced.grid(row=1, column=1,pady=(20,10),padx=40)
 		
 		
@@ -106,11 +108,12 @@ class Interface(Frame):
 	def cliquerSimulation(self):
 		global Timescale_value_init
 		Timescale_value_init='5'
-		os.system("python3 simulate.py "+filename+" 5")
+		#os.system("python3 simulate.py "+filename+" 5")
+		simulatepy(filename, Timescale_value_init)
 
-
+		#change timescale block
 		self.resultInit=Toplevel(master=fenetre)
-
+		self.resultInit.title("Initial model simulation")
 
 		self.resultInit.frameOption=Frame(master=self.resultInit)
 		self.resultInit.frameOption.pack(fill=BOTH)
@@ -118,14 +121,13 @@ class Interface(Frame):
 		self.resultInit.layoutOption=Label(master=self.resultInit.frameOption,text="Timescale :")
 		self.resultInit.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
-
 		self.resultInit.Entry_number=Entry(master=self.resultInit.frameOption,textvariable="Timescale_value")
 		self.resultInit.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
-
 
 		self.resultInit.GoButton=Button(master=self.resultInit.frameOption, text="Start",command=self.cliquerChangeTimescale)
 		self.resultInit.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
 
+		#visualization block
 		self.resultInit.frameImage=Frame(master=self.resultInit)
 		self.resultInit.frameImage.pack()
 
@@ -139,13 +141,17 @@ class Interface(Frame):
 
 	def cliquerChangeTimescale(self):
 		
-		os.system("python3 simulate.py "+filename+" "+self.resultInit.Entry_number.get())
-		imageo=Image.open(filename+"_reduced.tsv.png")
-
-		resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+		#os.system("python3 simulate.py "+filename+" "+self.resultInit.Entry_number.get())
+		print( self.resultInit.Entry_number.get())
+		if self.resultInit.Entry_number.get()!="":
+			simulatepy(filename, self.resultInit.Entry_number.get())
 		
-		self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
-		self.resultInit.canva.image=resultsimu
+			imageo=Image.open(filename+".png")
+
+			resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+		
+			self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
+			self.resultInit.canva.image=resultsimu
 		
 
 
@@ -153,8 +159,9 @@ class Interface(Frame):
 		
 	# Reduce the model
 	def cliquerResult(self):
-		
-		os.system("python3 reduction.py "+filename)
+		global G
+		G = reductionpy(filename)
+		#os.system("python3 reduction.py "+filename)
 		#able network and simulation vizualisation
 		self.charge_network_reduced.configure(state=NORMAL)
 		self.charge_reduced_simulation.configure(state=NORMAL)
@@ -163,9 +170,10 @@ class Interface(Frame):
 
 		global Timescale_value
 		Timescale_value='5'
-		os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
-		print ("python3 simulate.py "+filename+"_reduced.tsv 5")
+		simulatepy(filename+"_reduced.tsv", Timescale_value)
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
 		self.result=Toplevel(master=fenetre)
+		self.result.title("Reduced model simulation")
 		
 
 		self.result.frameOption=Frame(master=self.result)
@@ -193,17 +201,23 @@ class Interface(Frame):
 
 
 	def cliquerChangeTimescaleReduced(self):
-		os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
-		imageo=Image.open(filename+"_reduced.tsv.png")
-		resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-		self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
-		self.result.canva.image=resultsimu
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
+		if self.result.Entry_number.get()!="":
+			simulatepy(filename+"_reduced.tsv", self.result.Entry_number.get())
+			imageo=Image.open(filename+"_reduced.tsv.png")
+			resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+			self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
+			self.result.canva.image=resultsimu
 
 	def cliquerNetwork(self):
 		global Layout
 		LayoutValue='dot'
+		input_G = load(filename)
+		savename = filename + "input_graph" + ".png"
+		draw_graph(input_G,savename,'png','dot')
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
 		self.networkInitWindow=Toplevel(master=fenetre)
+		self.networkInitWindow.title("Initial network")
 		
 
 		self.networkInitWindow.frameOption=Frame(master=self.networkInitWindow)
@@ -213,8 +227,8 @@ class Interface(Frame):
 		self.networkInitWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
-		self.networkInitWindow.Entry_number=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="Layout",values=["neato","dot","twopi","circo","fdp","nop"])
-		self.networkInitWindow.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
+		self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
+		self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
 
 		self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout)
@@ -223,8 +237,11 @@ class Interface(Frame):
 		self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
 		self.networkInitWindow.frameImage.pack()
 
-		imageo=Image.open(filename+"_reduced.tsv.png")
+		imageo=Image.open(savename)
 		resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+		#resultNetwork.resize(500,800)
+		#resultNetwork.zoom(500,500)
+		#resultNetwork=resultNetwork._PhotoImage__photo.zoom(4)
 		self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 		self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
 		self.networkInitWindow.canva.image=resultNetwork
@@ -233,10 +250,67 @@ class Interface(Frame):
 
 	def cliquerChangeLayout(self):
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
-		imageo=Image.open(filename+"_reduced.tsv.png")
+		input_G = load(filename)
+		savename = filename + "input_graph" + ".png"
+		if self.networkInitWindow.Layout_CB.get()!="":
+			draw_graph(input_G,savename,'png',self.networkInitWindow.Layout_CB.get())
+			imageo=Image.open(savename)
+			resultNetwork= ImageTk.PhotoImage(imageo)
+			#self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+			self.networkInitWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
+			self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+			self.networkInitWindow.canva.image=resultNetwork
+			self.networkInitWindow.canva.pack(fill=BOTH)
+
+	def cliquerNetwork_reduced(self):
+		LayoutValue='dot'
+		#G = reductionpy(filename)
+		u_G=load('%s_reduced.tsv' % filename)
+		rsavename = filename + "reduced_graph" + ".png"
+		draw_graph(u_G,rsavename,'png','dot')
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
+		self.networkReducedWindow=Toplevel(master=fenetre)
+		self.networkReducedWindow.title("Reduced network")
+		
+
+		self.networkReducedWindow.frameOption=Frame(master=self.networkReducedWindow)
+		self.networkReducedWindow.frameOption.pack(fill=BOTH)
+
+		self.networkReducedWindow.layoutOption=Label(master=self.networkReducedWindow.frameOption,text="Layout :")
+		self.networkReducedWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
+
+
+		self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
+		self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
+
+
+		self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced)
+		self.networkReducedWindow.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+
+		self.networkReducedWindow.frameImage=Frame(master=self.networkReducedWindow)
+		self.networkReducedWindow.frameImage.pack()
+
+		imageo=Image.open(rsavename)
 		resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-		self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
-		self.networkInitWindow.canva.image=resultNetwork
+		self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+		self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+		self.networkReducedWindow.canva.image=resultNetwork
+		self.networkReducedWindow.canva.pack(fill=BOTH)
+
+	def cliquerChangeLayout_reduced(self):
+		#G = reductionpy(filename)
+		u_G=load('%s_reduced.tsv' % filename)
+		rsavename = filename + "reduced_graph" + ".png"
+		if self.networkReducedWindow.Layout_CB.get()!="":
+			draw_graph(u_G,rsavename,'png',self.networkReducedWindow.Layout_CB.get())
+			imageo=Image.open(rsavename)
+			resultNetwork= ImageTk.PhotoImage(imageo)
+			self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
+			self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+			self.networkReducedWindow.canva.image=resultNetwork
+			self.networkReducedWindow.canva.pack(fill=BOTH)
+
+
 
 
 
