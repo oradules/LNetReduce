@@ -1,0 +1,7 @@
+source;target;weight
+A1;A2;2
+A2;A1;8
+A1;A3;6
+A3;A1;16
+A1;A4;4
+A4;A1;13
