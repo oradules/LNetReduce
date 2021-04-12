@@ -222,18 +222,17 @@ def validity_check( G ):
 #weight is strictly bigger (i.e. slower reaction speed). Then put a -1 at the
 #column indexed by the origin node of this latter edge.
 def right_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
     M = np.zeros( (G.size(),G.order()), int )
-    i = 0
-    for e in G.edges(data='weight'):
-        M[i][e[0]] = 1
-        v = G.get_edge_data(*e)['weight']
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][node_to_index[e[0]]] = 1
+        w = e[2]
         dfs = list( nx.edge_dfs(G,e) )
-        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > v]
+        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > w]
         if L != []:
-            M[i][L[0][0]] = -1
+            M[i][ node_to_index[L[0][0]] ] = -1
         else:
-            M[i][dfs[-1][1]] = -1
-        i += 1
+            M[i][ node_to_index[dfs[-1][1]] ] = -1
     return M
 
 #The right vectors of a reduced digraph are here given in the form of a matrix,
@@ -243,20 +242,19 @@ def right_vector( G ):
 #graph whose weight is strictly bigger (i.e. slower reaction speed). Then put a
 #one at the column indexed by the origin node of this latter edge.
 def left_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
     M = np.zeros( (G.size(),G.order()), int )
-    i = 0
-    for e in G.edges(data='weight'):
-        M[i][e[0]] = 1
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][ node_to_index[e[0]] ] = 1
         v = G.get_edge_data(*e)['weight']
         H = G.reverse()
         dfs = list( nx.edge_dfs(H,e[0]) )
         if dfs != []:
             for f in dfs:
                 if H.get_edge_data(*f)['weight'] < v:
-                    M[i][f[1]] = 1
+                    M[i][ node_to_index[f[1]] ] = 1
                 else:
                     break
-        i += 1
     return M
 
 def show_graph(G, label=False):
