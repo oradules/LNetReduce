@@ -212,8 +212,9 @@ class Interface(Frame):
 	def cliquerNetwork(self):
 		global Layout
 		LayoutValue='dot'
+		FormatValue='png'
 		input_G = load(filename)
-		savename = filename + "input_graph" + ".png"
+		savename = filename + "input_graph" + "." + FormatValue
 		draw_graph(input_G,savename,'png','dot')
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
 		self.networkInitWindow=Toplevel(master=fenetre)
@@ -230,9 +231,15 @@ class Interface(Frame):
 		self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
 		self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
+		self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameOption,text="Format :")
+		self.networkInitWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
+
+
+		self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])#,"nop"])
+		self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
 		self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout)
-		self.networkInitWindow.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+		self.networkInitWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 		self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
 		self.networkInitWindow.frameImage.pack()
@@ -251,15 +258,28 @@ class Interface(Frame):
 	def cliquerChangeLayout(self):
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
 		input_G = load(filename)
-		savename = filename + "input_graph" + ".png"
+		format='png'
+		if self.networkInitWindow.Format_CB.get()!="":
+			format = self.networkInitWindow.Format_CB.get()
+		layout='dot'
 		if self.networkInitWindow.Layout_CB.get()!="":
-			draw_graph(input_G,savename,'png',self.networkInitWindow.Layout_CB.get())
+			layout = self.networkInitWindow.Layout_CB.get()
+		savename = filename + "input_graph" + "." + format
+		draw_graph(input_G,savename,format,layout)
+		if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
 			imageo=Image.open(savename)
 			resultNetwork= ImageTk.PhotoImage(imageo)
 			#self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+			self.networkInitWindow.canva.delete("all")
 			self.networkInitWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
 			self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
 			self.networkInitWindow.canva.image=resultNetwork
+			self.networkInitWindow.canva.pack(fill=BOTH)
+		else:
+			self.networkInitWindow.canva.delete("all")
+			self.networkInitWindow.canva.config(width=len(savename)*6+6*14,height=20)
+			self.networkInitWindow.canva.create_text(2,2,anchor=NW,text="File saved in "+savename)
+			self.networkInitWindow.canva.text="File saved in "+savename
 			self.networkInitWindow.canva.pack(fill=BOTH)
 
 	def cliquerNetwork_reduced(self):
@@ -282,10 +302,15 @@ class Interface(Frame):
 
 		self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
 		self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
+		
+		self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameOption,text="Format :")
+		self.networkReducedWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
+		self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])#,"nop"])
+		self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
 		self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced)
-		self.networkReducedWindow.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+		self.networkReducedWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 		self.networkReducedWindow.frameImage=Frame(master=self.networkReducedWindow)
 		self.networkReducedWindow.frameImage.pack()
@@ -297,21 +322,33 @@ class Interface(Frame):
 		self.networkReducedWindow.canva.image=resultNetwork
 		self.networkReducedWindow.canva.pack(fill=BOTH)
 
+
 	def cliquerChangeLayout_reduced(self):
-		#G = reductionpy(filename)
+		#os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
 		u_G=load('%s_reduced.tsv' % filename)
-		rsavename = filename + "reduced_graph" + ".png"
+		format='png'
+		if self.networkReducedWindow.Format_CB.get()!="":
+			format = self.networkReducedWindow.Format_CB.get()
+		layout='dot'
 		if self.networkReducedWindow.Layout_CB.get()!="":
-			draw_graph(u_G,rsavename,'png',self.networkReducedWindow.Layout_CB.get())
+			layout = self.networkReducedWindow.Layout_CB.get()
+		rsavename = filename + "reduced_graph" + "." + format
+		draw_graph(u_G,rsavename,format,layout)
+		if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
 			imageo=Image.open(rsavename)
 			resultNetwork= ImageTk.PhotoImage(imageo)
+			#self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+			self.networkReducedWindow.canva.delete("all")
 			self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
 			self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
 			self.networkReducedWindow.canva.image=resultNetwork
 			self.networkReducedWindow.canva.pack(fill=BOTH)
-
-
-
+		else:
+			self.networkReducedWindow.canva.delete("all")
+			self.networkReducedWindow.canva.config(width=len(rsavename)*6+6*14,height=20)
+			self.networkReducedWindow.canva.create_text(2,2,anchor=NW,text="File saved in "+rsavename)
+			self.networkReducedWindow.canva.text="File saved in "+rsavename
+			self.networkReducedWindow.canva.pack(fill=BOTH)
 
 
 		
