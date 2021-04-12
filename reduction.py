@@ -23,6 +23,7 @@ def prune( G ):
         edges = G.out_edges(node,data='weight')
         if edges:
             fastest = min( edges, key=lambda x:x[2] )
+            check_unique(edges, fastest[2])
             fastest_edge_list.append(fastest)
 
     #creates and returns the pruned graph out of the list of the fastest edges
@@ -89,6 +90,7 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #with the limiting step, renormalize the out edges 
     #and redirect the in edges
     lim_step = max( cycle_edges, key=lambda x:x[2] )
+    check_unique(cycle_edges, lim_step[2])
     out_edges = select_unique_edges( renorm( cycle_edges, out_list, lim_step ) )
     in_edges = select_unique_edges( redirect( in_list, lim_step[0] ) )
     #creates the glued graph by taking the restored graph and replacing
@@ -173,6 +175,7 @@ def unglue_stack( stack ):
             cur_incoming = G.in_edges(i, data='weight')
             cycle = [e[0] for e in cycle_edges]
             lim_step = max( cycle_edges, key=lambda x:x[2] )
+            check_unique(cycle_edges, lim_step[2])
             lim_node = lim_step[0]
             added_edges += [ e for e in cycle_edges if e != lim_step ]
             
@@ -265,6 +268,20 @@ def show_graph(G, label=False):
 
 def reduce_graph( G ):
     return unglue_stack( glue(G) )
+
+
+def check_unique(edges, best):
+    count = 0
+    for v in edges:
+        if v[2] == best:
+            if count:
+                print("Duplicated best edge")
+                raise DuplicateMinError()
+            count += 1
+
+class DuplicateMinError(Exception):
+    def __init__(self, info):
+        self.info = info
 
 
 ############################# Main ############################################
