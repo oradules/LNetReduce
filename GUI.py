@@ -217,28 +217,28 @@ class Interface(Frame):
 		savename = filename + "input_graph" + "." + FormatValue
 		draw_graph(input_G,savename,'png','dot')
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
-		self.networkInitWindow=Toplevel(master=fenetre)
+		self.networkInitWindow=Toplevel(master=fenetre,bg="white")
 		self.networkInitWindow.title("Initial network")
 		
 
-		self.networkInitWindow.frameOption=Frame(master=self.networkInitWindow)
+		self.networkInitWindow.frameOption=Frame(master=self.networkInitWindow,bg=self.color)
 		self.networkInitWindow.frameOption.pack(fill=BOTH)
 
-		self.networkInitWindow.layoutOption=Label(master=self.networkInitWindow.frameOption,text="Layout :")
+		self.networkInitWindow.layoutOption=Label(master=self.networkInitWindow.frameOption,text="Layout :",bg=self.color)
 		self.networkInitWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
-		self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
+		self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
 		self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
-		self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameOption,text="Format :")
+		self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameOption,text="Format :",bg=self.color)
 		self.networkInitWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
 
-		self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])#,"nop"])
+		self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
 		self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
-		self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout)
+		self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout,bg=self.color_button)
 		self.networkInitWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 		self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
@@ -289,27 +289,27 @@ class Interface(Frame):
 		rsavename = filename + "reduced_graph" + ".png"
 		draw_graph(u_G,rsavename,'png','dot')
 		#os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
-		self.networkReducedWindow=Toplevel(master=fenetre)
+		self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
 		self.networkReducedWindow.title("Reduced network")
 		
 
 		self.networkReducedWindow.frameOption=Frame(master=self.networkReducedWindow)
 		self.networkReducedWindow.frameOption.pack(fill=BOTH)
 
-		self.networkReducedWindow.layoutOption=Label(master=self.networkReducedWindow.frameOption,text="Layout :")
+		self.networkReducedWindow.layoutOption=Label(master=self.networkReducedWindow.frameOption,text="Layout :",bg=self.color)
 		self.networkReducedWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
-		self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])#,"nop"])
+		self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
 		self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 		
-		self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameOption,text="Format :")
+		self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameOption,text="Format :",bg=self.color)
 		self.networkReducedWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
-		self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])#,"nop"])
+		self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
 		self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
-		self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced)
+		self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced,bg=self.color_button)
 		self.networkReducedWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 		self.networkReducedWindow.frameImage=Frame(master=self.networkReducedWindow)
@@ -365,6 +365,6 @@ class Interface(Frame):
 if __name__ == "__main__":
 	fenetre = Tk()
 	interface = Interface(fenetre)
-	fenetre.title("Monomolecular reduction tool")
+	fenetre.title("LNetReduce")
 	interface.mainloop()
 	
