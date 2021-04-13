@@ -26,6 +26,7 @@ def prune( G ):
         edges = G.out_edges(node,data='weight')
         if edges:
             fastest = min( edges, key=lambda x:x[2] )
+            check_unique(edges, fastest[2])
             fastest_edge_list.append(fastest)
 
     #creates and returns the pruned graph out of the list of the fastest edges
@@ -92,6 +93,7 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #with the limiting step, renormalize the out edges 
     #and redirect the in edges
     lim_step = max( cycle_edges, key=lambda x:x[2] )
+    check_unique(cycle_edges, lim_step[2])
     out_edges = select_unique_edges( renorm( cycle_edges, out_list, lim_step ) )
     in_edges = select_unique_edges( redirect( in_list, lim_step[0] ) )
     #creates the glued graph by taking the restored graph and replacing
@@ -176,6 +178,7 @@ def unglue_stack( stack ):
             cur_incoming = G.in_edges(i, data='weight')
             cycle = [e[0] for e in cycle_edges]
             lim_step = max( cycle_edges, key=lambda x:x[2] )
+            check_unique(cycle_edges, lim_step[2])
             lim_node = lim_step[0]
             added_edges += [ e for e in cycle_edges if e != lim_step ]
             
@@ -222,18 +225,17 @@ def validity_check( G ):
 #weight is strictly bigger (i.e. slower reaction speed). Then put a -1 at the
 #column indexed by the origin node of this latter edge.
 def right_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
     M = np.zeros( (G.size(),G.order()), int )
-    i = 0
-    for e in G.edges(data='weight'):
-        M[i][e[0]] = 1
-        v = G.get_edge_data(*e)['weight']
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][node_to_index[e[0]]] = 1
+        w = e[2]
         dfs = list( nx.edge_dfs(G,e) )
-        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > v]
+        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > w]
         if L != []:
-            M[i][L[0][0]] = -1
+            M[i][ node_to_index[L[0][0]] ] = -1
         else:
-            M[i][dfs[-1][1]] = -1
-        i += 1
+            M[i][ node_to_index[dfs[-1][1]] ] = -1
     return M
 
 #The right vectors of a reduced digraph are here given in the form of a matrix,
@@ -243,20 +245,19 @@ def right_vector( G ):
 #graph whose weight is strictly bigger (i.e. slower reaction speed). Then put a
 #one at the column indexed by the origin node of this latter edge.
 def left_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
     M = np.zeros( (G.size(),G.order()), int )
-    i = 0
-    for e in G.edges(data='weight'):
-        M[i][e[0]] = 1
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][ node_to_index[e[0]] ] = 1
         v = G.get_edge_data(*e)['weight']
         H = G.reverse()
         dfs = list( nx.edge_dfs(H,e[0]) )
         if dfs != []:
             for f in dfs:
                 if H.get_edge_data(*f)['weight'] < v:
-                    M[i][f[1]] = 1
+                    M[i][ node_to_index[f[1]] ] = 1
                 else:
                     break
-        i += 1
     return M
 
 def show_graph(G, label=False):
@@ -268,6 +269,19 @@ def show_graph(G, label=False):
 
 def reduce_graph( G ):
     return unglue_stack( glue(G) )
+
+def check_unique(edges, best):
+    count = 0
+    for v in edges:
+        if v[2] == best:
+            if count:
+                print("Duplicated best edge")
+                raise DuplicateMinError()
+            count += 1
+
+class DuplicateMinError(Exception):
+    def __init__(self, info):
+        self.info = info
 
 def draw_graph( G , file, drawformat, layout):
     AG = nx.nx_agraph.to_agraph(G)
