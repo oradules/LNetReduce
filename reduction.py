@@ -295,30 +295,30 @@ def draw_graph( G , file, drawformat, layout):
 
 ############################# Main ############################################
 
-#if __name__ == "__main__":
-#    if len(sys.argv) != 2:
-#        print( 'usage:' )
-#        print( sys.argv[0] + ' <filename>' )
-#        sys.exit()
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print( 'usage:' )
+        print( sys.argv[0] + ' <filename>' )
+        sys.exit()
 
-#    filename = sys.argv[1]
-#    input_G = load(filename)
-#    draw_graph(input_G,"input_model_graph.png",'png','dot')
+    filename = sys.argv[1]
+    input_G = load(filename)
+    draw_graph(input_G,filename+"input_graph.png",'png','dot')
 
-#    try:
-#        u_G = reduce_graph( input_G )
-#    except:
-#        print( "Sorry, this instance is not reducible because its reduced \
-#             form has non separated reaction speeds" )
-#        sys.exit()
+    try:
+        u_G = reduce_graph( input_G )
+    except:
+        print( "Sorry, this instance is not reducible because its reduced \
+             form has non separated reaction speeds" )
+        sys.exit()
 
-#    draw_graph(u_G, "reduced_graph.png", 'png', 'dot')
-#    save_graph( u_G, '%s_reduced.tsv' % filename)
+    save_graph( u_G, '%s_reduced.tsv' % filename)
+    draw_graph(u_G, filename+"reduced_graph.png", 'png', 'dot')
 
-#    # Compute the right and left vectors
-#    R = right_vector(u_G)
-#    L = left_vector(u_G)
-#    print( L )
+    # Compute the right and left vectors
+    R = right_vector(u_G)
+    L = left_vector(u_G)
+    print( L )
 
 def reductionpy(filename):
     input_G = load(filename)

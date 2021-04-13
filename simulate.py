@@ -45,7 +45,7 @@ def simulate(a, timescale, steps=1000, logx=True):
 def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
-    if not time:
+    if time is None:
         time = np.arange(len(trace))
     trace = trace.transpose()
     f1 = plt.figure()
@@ -53,7 +53,7 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
     for data in trace:
         style = styles[ int(idx / 7) ]
         if labels: label = labels[idx]
-        else: label="x%s" % (idx+1)
+        else: label="x%s" % (idx)
         plt.plot(time, data, label=label, linestyle=style)
         if logx:
             plt.xscale('log')
@@ -78,15 +78,15 @@ def simulate_and_plot(filename, timescale, steps=1000, save=False):
     t,X = simulate(a, timescale, steps=steps)
     plot_trace(X, filename, time=t, logy=False, logx=True)
 
-#if __name__ == "__main__":
-#    if len(sys.argv) != 3:
-#        print( 'usage:' )
-#        print( sys.argv[0] + ' <filename> <timescale>' )
-#        sys.exit()
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print( 'usage:' )
+        print( sys.argv[0] + ' <filename> <timescale>' )
+        sys.exit()
     
-#    filename = sys.argv[1]
-#    timescale = int(sys.argv[2])
-#    simulate_and_plot(filename, timescale, steps=1000, save=True)
+    filename = sys.argv[1]
+    timescale = int(sys.argv[2])
+    simulate_and_plot(filename, timescale, steps=1000, save=True)
 
 def simulatepy(_filename, _timescale):
     timescale = int(_timescale)
