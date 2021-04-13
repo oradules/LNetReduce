@@ -6,7 +6,7 @@ from scipy import integrate
 def load(filename):
     return np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int)
 
-def simulate(a, timescale):
+def simulate(a, timescale, steps=1000, logx=True):
     orders=a[:,2]
     source=a[:,0]
     target=a[:,1]
@@ -35,12 +35,11 @@ def simulate(a, timescale):
                     r[i] = x[j] * k[i]
         return np.dot(S,r)
 
-    t0 = 0
-    tmax = 10**timescale
-    steps = 100000
-
-    t = np.linspace(t0, tmax, steps)
-    return integrate.odeint(dx_dt, x0, t, mxstep=5000)
+    if logx:
+        t = np.logspace(0, timescale, steps)
+    else:
+        t = np.linspace(0, 10**timescale, steps)
+    return t,integrate.odeint(dx_dt, x0, t, mxstep=5000)
 
 
 def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
@@ -73,11 +72,11 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
         return plt
 
 
-def simulate_and_plot(filename, timescale, save=False):
+def simulate_and_plot(filename, timescale, steps=1000, save=False):
     a = load(filename)
     if not save: filename = None
-    X = simulate(a, timescale)
-    plot_trace(X, filename, logy=False, logx=True)
+    t,X = simulate(a, timescale, steps=steps)
+    plot_trace(X, filename, time=t, logy=False, logx=True)
 
 #if __name__ == "__main__":
 #    if len(sys.argv) != 3:
@@ -87,8 +86,8 @@ def simulate_and_plot(filename, timescale, save=False):
     
 #    filename = sys.argv[1]
 #    timescale = int(sys.argv[2])
-#    simulate_and_plot(filename, timescale, save=True)
+#    simulate_and_plot(filename, timescale, steps=1000, save=True)
 
 def simulatepy(_filename, _timescale):
     timescale = int(_timescale)
-    simulate_and_plot(_filename, timescale, save=True)
+    simulate_and_plot(_filename, timescale, steps=1000, save=True)
