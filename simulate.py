@@ -86,5 +86,8 @@ if __name__ == "__main__":
     
     filename = sys.argv[1]
     timescale = int(sys.argv[2])
-    simulate_and_plot(filename, timescale, save=True)
+    simulate_and_plot(filename, timescale, steps=1000, save=True)
 
+def simulatepy(_filename, _timescale):
+    timescale = int(_timescale)
+    simulate_and_plot(_filename, timescale, steps=1000, save=True)
