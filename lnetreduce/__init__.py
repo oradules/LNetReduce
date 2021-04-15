@@ -1,5 +1,7 @@
 from . import reduction
 from . import simulation
+from . import gui
+import sys
 
 # Re-export the main functions
 
@@ -9,4 +11,15 @@ save_graph = reduction.save_graph
 
 simulate = simulation.simulate
 simulate_and_plot = simulation.simulate_and_plot
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    
+    if len(argv) > 1:
+        print("TODO: Add a command-line interface to reduce and simulate")
+        return
+
+    gui.launch_gui()
 
