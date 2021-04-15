@@ -5,7 +5,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from os.path import basename
 import os
-from simulate import *
+from simulation import *
 from reduction import *
 
 

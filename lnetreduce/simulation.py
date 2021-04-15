@@ -1,12 +1,29 @@
 import sys
 import numpy as np
 import pylab as plt
+import networkx as nx
 from scipy import integrate
 
 def load(filename):
     return np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int)
 
+def from_graph(G):
+    X = np.zeros((len(G.edges),3)).astype(np.int32)
+    node_names = [ n for n in G ]
+
+    for i,e  in enumerate(G.edges):
+        X[i,0] = node_names.index(e[0])
+        X[i,1] = node_names.index(e[1])
+        X[i,2] = G.get_edge_data(e[0],e[1])['weight']
+
+    return X
+
 def simulate(a, timescale, steps=1000, logx=True):
+    if isinstance(a, nx.Graph):
+        a = from_graph(a)
+    elif isinstance(a, str):
+        a = load(a)
+
     orders=a[:,2]
     source=a[:,0]
     target=a[:,1]
@@ -72,11 +89,9 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
         return plt
 
 
-def simulate_and_plot(filename, timescale, steps=1000, save=False):
-    a = load(filename)
-    if not save: filename = None
+def simulate_and_plot(a, timescale, steps=1000, save=None):
     t,X = simulate(a, timescale, steps=steps)
-    plot_trace(X, filename, time=t, logy=False, logx=True)
+    return plot_trace(X, save, time=t, logy=False, logx=True)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -86,7 +101,7 @@ if __name__ == "__main__":
     
     filename = sys.argv[1]
     timescale = int(sys.argv[2])
-    simulate_and_plot(filename, timescale, steps=1000, save=True)
+    simulate_and_plot(filename, timescale, steps=1000, save=filename)
 
 def simulatepy(_filename, _timescale):
     timescale = int(_timescale)
