@@ -10,18 +10,7 @@ def load(filename):
     return [a,b,c]
 
 def graph_to_sim(G):
-    return [ np.asarray(a) for a in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
-
-def from_graph(G):
-    X = np.zeros((len(G.edges),3)).astype(np.int32)
-    node_names = [ n for n in G ]
-
-    for i,e  in enumerate(G.edges):
-        X[i,0] = node_names.index(e[0])
-        X[i,1] = node_names.index(e[1])
-        X[i,2] = G.get_edge_data(e[0],e[1])['weight']
-
-    return X
+    return [ np.asarray(A) for A in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
 
 def simulate(a, timescale, steps=1000, logx=True):
     if isinstance(a, nx.Graph):
