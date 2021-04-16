@@ -5,27 +5,21 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from os.path import basename
 import os
-from simulate import *
-from reduction import *
 
-
-
+import lnetreduce
 
 class Interface(Frame):
     global filename
     global Timescale_value
 
-    
-    """Notre fenêtre principale.
-    Tous les widgets sont stockés comme attributs de cette fenêtre."""
-    
-    def __init__(self, fenetre,bg='#ADB7FA', **kwargs):
+    """The main window.
+    All widgets are stored as attributes in this window."""
+    def __init__(self, fenetre, bg='#ADB7FA', bt='#334DFF', **kwargs):
         self.color=StringVar()
-        self.color='#ADB7FA'
-        self.color_button='#334DFF'
+        self.color=bg
+        self.color_button=bt
         filename=StringVar()
         Timescale_value=IntVar()
-         
 
         Frame.__init__(self, fenetre, width=768, height=576,bg=self.color, **kwargs)
 
@@ -161,8 +155,8 @@ class Interface(Frame):
     def cliquerResult(self):
         global G
         G = reductionpy(filename)
-        #os.system("python3 reduction.py "+filename)
-        #able network and simulation vizualisation
+
+        # Enable network and simulation vizualisation
         self.charge_network_reduced.configure(state=NORMAL)
         self.charge_reduced_simulation.configure(state=NORMAL)
 
@@ -213,9 +207,9 @@ class Interface(Frame):
         global Layout
         LayoutValue='dot'
         FormatValue='png'
-        input_G = load(filename)
+        input_G = lnetreduce.load_graph(filename)
         savename = filename + "input_graph" + "." + FormatValue
-        draw_graph(input_G,savename,'png','dot')
+        lnetreduce.reduction.draw_graph(input_G,savename,'png','dot')
         #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
@@ -267,8 +261,7 @@ class Interface(Frame):
 
 
     def cliquerChangeLayout(self):
-        #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
-        input_G = load(filename)
+        input_G = lnetreduce.load_graph(filename)
         format='png'
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()
@@ -276,7 +269,7 @@ class Interface(Frame):
         if self.networkInitWindow.Layout_CB.get()!="":
             layout = self.networkInitWindow.Layout_CB.get()
         savename = filename + "input_graph" + "." + format
-        draw_graph(input_G,savename,format,layout)
+        lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
         if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
             imageo=Image.open(savename)
             resultNetwork= ImageTk.PhotoImage(imageo)
@@ -313,14 +306,12 @@ class Interface(Frame):
 
     def cliquerNetwork_reduced(self):
         LayoutValue='dot'
-        #G = reductionpy(filename)
-        u_G=load('%s_reduced.tsv' % filename)
+        u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
         rsavename = filename + "reduced_graph" + ".png"
-        draw_graph(u_G,rsavename,'png','dot')
-        #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
+        lnetreduce.reduction.draw_graph(u_G,rsavename,'png','dot')
+
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
-        
 
         self.networkReducedWindow.frameOption=Frame(master=self.networkReducedWindow,bg=self.color)
         self.networkReducedWindow.frameOption.pack(fill=BOTH)
@@ -362,7 +353,7 @@ class Interface(Frame):
 
     def cliquerChangeLayout_reduced(self):
         #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
-        u_G=load('%s_reduced.tsv' % filename)
+        u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
         format='png'
         if self.networkReducedWindow.Format_CB.get()!="":
             format = self.networkReducedWindow.Format_CB.get()
@@ -370,7 +361,7 @@ class Interface(Frame):
         if self.networkReducedWindow.Layout_CB.get()!="":
             layout = self.networkReducedWindow.Layout_CB.get()
         rsavename = filename + "reduced_graph" + "." + format
-        draw_graph(u_G,rsavename,format,layout)
+        lnetreduce.reduction.draw_graph(u_G,rsavename,format,layout)
         if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
             imageo=Image.open(rsavename)
             resultNetwork= ImageTk.PhotoImage(imageo)
@@ -404,18 +395,24 @@ class Interface(Frame):
             showwarning(message='Please select format', )
 
 
-        
+def reductionpy(filename):
+    input_G = lnetreduce.load_graph(filename)
+    try:
+        u_G = lnetreduce.reduce_graph( input_G )
+    except:
+        print( "Sorry, this instance is not reducible because its reduced \
+             form has non separated reaction speeds" )
+        sys.exit()
 
+    lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
+    return input_G, u_G
 
-    # Checker le format du model
-    def CheckModel(self):
-        print ("check model")
+def simulatepy(_filename, _timescale):
+    timescale = int(_timescale)
+    lnetreduce.simulate_and_plot(_filename, timescale, steps=1000, save=_filename)
 
-
-    
-
-
-if __name__ == "__main__":
+def launch_gui():
+    global fenetre
     fenetre = Tk()
     interface = Interface(fenetre)
     fenetre.title("LNetReduce")

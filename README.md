@@ -1,6 +1,11 @@
-# monomolecular_reduction
+# LNetReduce: reduction of monomolecular networks
 
-Installation:
+## Test online
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oradules/lnetreduce/HEAD)
+
+
+## Installation
 
 Windows:
 
