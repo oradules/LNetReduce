@@ -9,6 +9,9 @@ def load(filename):
     c=np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int, unpack=True, usecols=(2))
     return [a,b,c]
 
+def graph_to_sim(G):
+    return [ np.asarray(a) for a in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
+
 def from_graph(G):
     X = np.zeros((len(G.edges),3)).astype(np.int32)
     node_names = [ n for n in G ]
@@ -22,7 +25,7 @@ def from_graph(G):
 
 def simulate(a, timescale, steps=1000, logx=True):
     if isinstance(a, nx.Graph):
-        a = from_graph(a)
+        a = graph_to_sim(a)
     elif isinstance(a, str):
         a = load(a)
 
