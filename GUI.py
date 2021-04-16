@@ -231,12 +231,9 @@ class Interface(Frame):
         self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
         self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
-        self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameOption,text="Format :",bg=self.color)
-        self.networkInitWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
 
-        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
-        self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
 
         self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout,bg=self.color_button)
         self.networkInitWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
@@ -253,6 +250,20 @@ class Interface(Frame):
         self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkInitWindow.canva.image=resultNetwork
         self.networkInitWindow.canva.pack(fill=BOTH)
+
+
+        self.networkInitWindow.frameSave=Frame(master=self.networkInitWindow,bg=self.color)
+        self.networkInitWindow.frameSave.pack(fill=BOTH)
+
+        self.networkInitWindow.SaveButton=Button(master=self.networkInitWindow.frameSave, text="Save",command=self.cliquerFolder,bg=self.color_button)
+        self.networkInitWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
+
+        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
+        self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
+        self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameSave,text="Format :",bg=self.color)
+        self.networkInitWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
+
 
 
     def cliquerChangeLayout(self):
@@ -282,6 +293,24 @@ class Interface(Frame):
             self.networkInitWindow.canva.text="File saved in "+savename
             self.networkInitWindow.canva.pack(fill=BOTH)
 
+
+    def cliquerFolder(self):   
+        if self.networkInitWindow.Format_CB.get()!="":
+            format = self.networkInitWindow.Format_CB.get()   
+            self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+            savename = self.work_folder+basename(filename) + "input_graph" + "." + format 
+            input_G = load(filename)
+            if self.networkInitWindow.Layout_CB.get()!="":
+                layout = self.networkInitWindow.Layout_CB.get()
+                draw_graph(input_G,savename,format,layout) 
+            else:
+                layout="dot"
+                draw_graph(input_G,savename,format,layout)
+             
+        else:
+            showwarning(message='Please select format', )
+
+
     def cliquerNetwork_reduced(self):
         LayoutValue='dot'
         #G = reductionpy(filename)
@@ -299,15 +328,10 @@ class Interface(Frame):
         self.networkReducedWindow.layoutOption=Label(master=self.networkReducedWindow.frameOption,text="Layout :",bg=self.color)
         self.networkReducedWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
-
         self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
         self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
-        
-        self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameOption,text="Format :",bg=self.color)
-        self.networkReducedWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
-        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
-        self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
 
         self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced,bg=self.color_button)
         self.networkReducedWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
@@ -321,6 +345,19 @@ class Interface(Frame):
         self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkReducedWindow.canva.image=resultNetwork
         self.networkReducedWindow.canva.pack(fill=BOTH)
+
+
+        self.networkReducedWindow.frameSave=Frame(master=self.networkReducedWindow,bg=self.color)
+        self.networkReducedWindow.frameSave.pack(fill=BOTH)
+
+        self.networkReducedWindow.SaveButton=Button(master=self.networkReducedWindow.frameSave, text="Save",command=self.cliquerFolderReduced,bg=self.color_button)
+        self.networkReducedWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
+
+        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
+        self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
+        self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameSave,text="Format :",bg=self.color)
+        self.networkReducedWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
 
 
     def cliquerChangeLayout_reduced(self):
@@ -349,6 +386,22 @@ class Interface(Frame):
             self.networkReducedWindow.canva.create_text(2,2,anchor=NW,text="File saved in "+rsavename)
             self.networkReducedWindow.canva.text="File saved in "+rsavename
             self.networkReducedWindow.canva.pack(fill=BOTH)
+
+    def cliquerFolderReduced(self):   
+        if self.networkReducedWindow.Format_CB.get()!="":
+            format = self.networkReducedWindow.Format_CB.get()   
+            self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+            savename = self.work_folder+basename(filename) + "reduced_graph" + "." + format 
+            input_G = load(filename)
+            if self.networkReducedWindow.Layout_CB.get()!="":
+                layout = self.networkReducedWindow.Layout_CB.get()
+                draw_graph(input_G,savename,format,layout) 
+            else:
+                layout="dot"
+                draw_graph(input_G,savename,format,layout)
+             
+        else:
+            showwarning(message='Please select format', )
 
 
         
