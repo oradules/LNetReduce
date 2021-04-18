@@ -1,6 +1,11 @@
-# monomolecular_reduction
+# LNetReduce: reduction of monomolecular networks
 
-Installation:
+## Test online
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oradules/lnetreduce/HEAD)
+
+
+## Installation
 
 Windows:
 
@@ -26,4 +31,10 @@ Windows:
 4. Install LNetReduce
 
     1. Download the zip file and extract it where you want.
+
+## Usage
+
+run ```python -m lnetreduce``` to launch the graphical interface.
+
+A Python API is also available, see the included jupyter-notebooks for examples.
 

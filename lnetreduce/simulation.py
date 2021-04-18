@@ -1,27 +1,54 @@
 import sys
 import numpy as np
 import pylab as plt
+import networkx as nx
 from scipy import integrate
 
 def load(filename):
-    return np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int)
+    a,b=np.loadtxt(filename, skiprows=1, delimiter=';', dtype=str, unpack=True, usecols=(0,1))
+    c=np.loadtxt(filename, skiprows=1, delimiter=';', dtype=int, unpack=True, usecols=(2))
+    return [a,b,c]
+
+def graph_to_sim(G):
+    return [ np.asarray(A) for A in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
 
 def simulate(a, timescale, steps=1000, logx=True):
-    orders=a[:,2]
-    source=a[:,0]
-    target=a[:,1]
+    if isinstance(a, nx.Graph):
+        a = graph_to_sim(a)
+    elif isinstance(a, str):
+        a = load(a)
+
+    orders=a[2]#a[:,2]
+    source=a[0]#[:,0]
+    target=a[1]#[:,1]
     nodes = set(source).union(target)
 
-    n=max(nodes) + 1
+    n=len(nodes)
     nr=len(orders)
     alpha = 1.0 / 10
     k = alpha ** orders
 
+    index_nodes=[]
+    for o in nodes:
+        index_nodes.append(o)
+    index_nodes.sort()
+
+    index_source=[]
+    for s in source:
+        for key in range(len(index_nodes)):
+            if index_nodes[key]==s:
+                index_source.append(key)
+    index_target=[]
+    for tar in target:
+        for l in range(len(index_nodes)):
+            if tar==index_nodes[l]:
+                index_target.append(l)
+
     # matrix of reactions
     S=np.zeros( (n,nr) )
     for i in range(nr):
-        S[source[i],i] = -1
-        S[target[i],i] =  1
+        S[index_source[i],i] = -1
+        S[index_target[i],i] =  1
 
     # initial state
     x0 = np.ones( (n,) )
@@ -39,7 +66,7 @@ def simulate(a, timescale, steps=1000, logx=True):
         t = np.logspace(0, timescale, steps)
     else:
         t = np.linspace(0, 10**timescale, steps)
-    return t,integrate.odeint(dx_dt, x0, t, mxstep=5000)
+    return t,integrate.odeint(dx_dt, x0, t, mxstep=5000),index_nodes
 
 
 def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
@@ -72,11 +99,9 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
         return plt
 
 
-def simulate_and_plot(filename, timescale, steps=1000, save=False):
-    a = load(filename)
-    if not save: filename = None
-    t,X = simulate(a, timescale, steps=steps)
-    plot_trace(X, filename, time=t, logy=False, logx=True)
+def simulate_and_plot(a, timescale, steps=1000, save=None):
+    t,X,labels = simulate(a, timescale, steps=steps)
+    return plot_trace(X, save, time=t, logy=False, logx=True,labels=labels)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -86,5 +111,5 @@ if __name__ == "__main__":
     
     filename = sys.argv[1]
     timescale = int(sys.argv[2])
-    simulate_and_plot(filename, timescale, save=True)
+    simulate_and_plot(filename, timescale, steps=1000, save=filename)
 

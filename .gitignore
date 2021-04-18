@@ -63,3 +63,8 @@ target/
 
 # generated reduced models
 *_reduced.tsv
+*.csv_reduced
+
+# generated images
+*.png
+
