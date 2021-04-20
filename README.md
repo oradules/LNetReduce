@@ -32,3 +32,9 @@ Windows:
 
     1. Download the zip file and extract it where you want.
 
+## Usage
+
+run ```python -m lnetreduce``` to launch the graphical interface.
+
+A Python API is also available, see the included jupyter-notebooks for examples.
+
