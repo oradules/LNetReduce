@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from os.path import basename
 import os
 
+
 import lnetreduce
 
 class Interface(Frame):
@@ -82,7 +83,10 @@ class Interface(Frame):
         
         
         self.charge_reduced_simulation = Button(self.frame2, text="Simulation", command=self.cliquerSimulationReduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
-        self.charge_reduced_simulation.grid(row=2, column=1,pady=(10,20),padx=40,sticky=W)
+        self.charge_reduced_simulation.grid(row=2, column=1,pady=(10,10),padx=40,sticky=W)
+
+        self.button_vectors=Button(self.frame2,bg=self.color_button,text="Save vectors",font=("Helvetica"),command=self.cliquerVector,state=DISABLED)
+        self.button_vectors.grid(row=3, column=1,pady=(10,20),padx=40,sticky=W)
 
 
         ################################################################################################################
@@ -92,12 +96,26 @@ class Interface(Frame):
 
         #Function to select file
     def cliquerFile(self): 
-        global filename       
+        global filename  
+        self.charge_network.configure(state=DISABLED)
+        self.charge_simulation.configure(state=DISABLED)
+        self.reduce.configure(state=DISABLED)
+        self.charge_reduced_simulation.configure(state=DISABLED)
+        self.charge_network_reduced.configure(state=DISABLED)
+        self.button_vectors.configure(state=DISABLED)   
         filename =  filedialog.askopenfilename(initialdir = "/HOME",title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
-        self.labelFile.configure(text=basename(filename))
-        self.charge_network.configure(state=NORMAL)
-        self.charge_simulation.configure(state=NORMAL)
-        self.reduce.configure(state=NORMAL)
+        try:
+            lnetreduce.load_graph(filename)
+            self.labelFile.configure(text=basename(filename))
+            self.charge_network.configure(state=NORMAL)
+            self.charge_simulation.configure(state=NORMAL)
+            self.reduce.configure(state=NORMAL)
+            self.charge_reduced_simulation.configure(state=DISABLED)
+            self.charge_network_reduced.configure(state=DISABLED)
+            self.button_vectors.configure(state=DISABLED)
+        except:
+            showwarning(message='An error occured loading the model, \n please check format', )
+
 
     def cliquerSimulation(self):
         global Timescale_value_init
@@ -154,11 +172,16 @@ class Interface(Frame):
     # Reduce the model
     def cliquerResult(self):
         global G
-        G = reductionpy(filename)
+        try:
+            G = reductionpy(filename)
 
-        # Enable network and simulation vizualisation
-        self.charge_network_reduced.configure(state=NORMAL)
-        self.charge_reduced_simulation.configure(state=NORMAL)
+            # Enable network and simulation vizualisation
+            self.charge_network_reduced.configure(state=NORMAL)
+            self.charge_reduced_simulation.configure(state=NORMAL)
+            self.button_vectors.configure(state=NORMAL)
+        except:
+            showwarning(message='An error occured when reducing model', )
+
 
     def cliquerSimulationReduced(self):
 
@@ -173,14 +196,14 @@ class Interface(Frame):
         self.result.frameOption=Frame(master=self.result,bg=self.color)
         self.result.frameOption.pack(fill=BOTH)
 
-        self.result.TimescaleOption=Label(master=self.result.frameOption,text="Timescale :")
+        self.result.TimescaleOption=Label(master=self.result.frameOption,text="Timescale :", bg=self.color)
         self.result.TimescaleOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
         self.result.Entry_number=Entry(master=self.result.frameOption,textvariable=Timescale_value)
         self.result.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
 
-        self.result.GoButton=Button(master=self.result.frameOption, text="Start",command=self.cliquerChangeTimescaleReduced)
+        self.result.GoButton=Button(master=self.result.frameOption, text="Start",command=self.cliquerChangeTimescaleReduced,bg=self.color_button)
         self.result.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
 
         self.result.frameImage=Frame(master=self.result)
@@ -222,14 +245,14 @@ class Interface(Frame):
         self.networkInitWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
 
-        self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
+        self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValueInit",values=["neato","dot","twopi","circo","fdp"])
         self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
 
 
 
 
-        self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Start",command=self.cliquerChangeLayout,bg=self.color_button)
+        self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Vizualise",command=self.cliquerChangeLayout,bg=self.color_button)
         self.networkInitWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
         self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
@@ -245,19 +268,17 @@ class Interface(Frame):
         self.networkInitWindow.canva.image=resultNetwork
         self.networkInitWindow.canva.pack(fill=BOTH)
 
-
         self.networkInitWindow.frameSave=Frame(master=self.networkInitWindow,bg=self.color)
         self.networkInitWindow.frameSave.pack(fill=BOTH)
 
         self.networkInitWindow.SaveButton=Button(master=self.networkInitWindow.frameSave, text="Save",command=self.cliquerFolder,bg=self.color_button)
         self.networkInitWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
+        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
         self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameSave,text="Format :",bg=self.color)
         self.networkInitWindow.formatOption.grid(row=2, column=1,pady=(10,20),padx=40,)
-
 
 
     def cliquerChangeLayout(self):
@@ -270,29 +291,21 @@ class Interface(Frame):
             layout = self.networkInitWindow.Layout_CB.get()
         savename = filename + "input_graph" + "." + format
         lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
-        if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
-            imageo=Image.open(savename)
-            resultNetwork= ImageTk.PhotoImage(imageo)
-            #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
-            self.networkInitWindow.canva.delete("all")
-            self.networkInitWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
-            self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
-            self.networkInitWindow.canva.image=resultNetwork
-            self.networkInitWindow.canva.pack(fill=BOTH)
-        else:
-            self.networkInitWindow.canva.delete("all")
-            #self.networkInitWindow.canva.config(width=len(savename)*6+6*14,height=20)
-            self.networkInitWindow.canva.create_text(2,2,anchor=NW,text="File saved in "+savename)
-            self.networkInitWindow.canva.text="File saved in "+savename
-            self.networkInitWindow.canva.pack(fill=BOTH)
-
-
+        imageo=Image.open(savename)
+        resultNetwork= ImageTk.PhotoImage(imageo)
+        #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+        self.networkInitWindow.canva.delete("all")
+        self.networkInitWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
+        self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+        self.networkInitWindow.canva.image=resultNetwork
+        self.networkInitWindow.canva.pack(fill=BOTH)
+        
     def cliquerFolder(self):   
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+basename(filename) + "input_graph" + "." + format 
-            input_G = load(filename)
+            savename = self.work_folder+"/"+basename(filename) + "input_graph" + "." + format 
+            input_G = lnetreduce.load(filename)
             if self.networkInitWindow.Layout_CB.get()!="":
                 layout = self.networkInitWindow.Layout_CB.get()
                 draw_graph(input_G,savename,format,layout) 
@@ -319,12 +332,14 @@ class Interface(Frame):
         self.networkReducedWindow.layoutOption=Label(master=self.networkReducedWindow.frameOption,text="Layout :",bg=self.color)
         self.networkReducedWindow.layoutOption.grid(row=1, column=1,pady=(10,20),padx=40,)
 
+
         self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
         self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
+        
 
 
 
-        self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Start",command=self.cliquerChangeLayout_reduced,bg=self.color_button)
+        self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Vizualise",command=self.cliquerChangeLayout_reduced,bg=self.color_button)
         self.networkReducedWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
         self.networkReducedWindow.frameImage=Frame(master=self.networkReducedWindow)
@@ -336,7 +351,6 @@ class Interface(Frame):
         self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkReducedWindow.canva.image=resultNetwork
         self.networkReducedWindow.canva.pack(fill=BOTH)
-
 
         self.networkReducedWindow.frameSave=Frame(master=self.networkReducedWindow,bg=self.color)
         self.networkReducedWindow.frameSave.pack(fill=BOTH)
@@ -362,31 +376,26 @@ class Interface(Frame):
             layout = self.networkReducedWindow.Layout_CB.get()
         rsavename = filename + "reduced_graph" + "." + format
         lnetreduce.reduction.draw_graph(u_G,rsavename,format,layout)
-        if format=='png' or format=='jpeg' or format=='gif' or format=='jpg':
-            imageo=Image.open(rsavename)
-            resultNetwork= ImageTk.PhotoImage(imageo)
-            #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
-            self.networkReducedWindow.canva.delete("all")
-            self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
-            self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
-            self.networkReducedWindow.canva.image=resultNetwork
-            self.networkReducedWindow.canva.pack(fill=BOTH)
-        else:
-            self.networkReducedWindow.canva.delete("all")
-            self.networkReducedWindow.canva.config(width=len(rsavename)*6+6*14,height=20)
-            self.networkReducedWindow.canva.create_text(2,2,anchor=NW,text="File saved in "+rsavename)
-            self.networkReducedWindow.canva.text="File saved in "+rsavename
-            self.networkReducedWindow.canva.pack(fill=BOTH)
+        
+        imageo=Image.open(rsavename)
+        resultNetwork= ImageTk.PhotoImage(imageo)
+        #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+        self.networkReducedWindow.canva.delete("all")
+        self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
+        self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+        self.networkReducedWindow.canva.image=resultNetwork
+        self.networkReducedWindow.canva.pack(fill=BOTH)
+        
 
     def cliquerFolderReduced(self):   
         if self.networkReducedWindow.Format_CB.get()!="":
             format = self.networkReducedWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+basename(filename) + "reduced_graph" + "." + format 
-            input_G = load(filename)
+            savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
+            u_G=load('%s_reduced.tsv' % filename)
             if self.networkReducedWindow.Layout_CB.get()!="":
                 layout = self.networkReducedWindow.Layout_CB.get()
-                draw_graph(input_G,savename,format,layout) 
+                draw_graph(u_G,savename,format,layout) 
             else:
                 layout="dot"
                 draw_graph(input_G,savename,format,layout)
@@ -394,6 +403,18 @@ class Interface(Frame):
         else:
             showwarning(message='Please select format', )
 
+    def cliquerVector(self):
+        
+    	self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+    	savename = self.work_folder+"/"+basename(filename) + "reduced_" 
+    	u_G=lnetreduce.load('%s_reduced.tsv' % filename)
+    	R = right_vector(u_G)
+    	L = left_vector(u_G)
+    	with open(savename+"right_vector.txt","w") as f:
+    	    f.write(str(R))
+    	with open(savename+"left_vector.txt","w") as g:
+    	    g.write(str(L))
+            
 
 def reductionpy(filename):
     input_G = lnetreduce.load_graph(filename)
