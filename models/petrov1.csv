@@ -1,0 +1,7 @@
+source;target;weight
+S1;S2;-1
+S2;S1;-3
+S2;S3;-1
+S3;S2;-1
+S3;S4;-2
+S4;S3;-1
