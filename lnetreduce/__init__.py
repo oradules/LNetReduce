@@ -8,6 +8,8 @@ import sys
 load_graph = reduction.load
 reduce_graph = reduction.reduce_graph
 save_graph = reduction.save_graph
+draw_graph = reduction.draw_graph
+plot_graph = reduction.plot_graph
 
 simulate = simulation.simulate
 simulate_and_plot = simulation.simulate_and_plot

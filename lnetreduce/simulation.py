@@ -12,7 +12,7 @@ def load(filename):
 def graph_to_sim(G):
     return [ np.asarray(A) for A in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
 
-def simulate(a, timescale, steps=1000, logx=True):
+def simulate(a, timescale, steps=1000, logx=True, method=None):
     if isinstance(a, nx.Graph):
         a = graph_to_sim(a)
     elif isinstance(a, str):
@@ -54,7 +54,7 @@ def simulate(a, timescale, steps=1000, logx=True):
     x0 = np.ones( (n,) )
 
     # construct the update function
-    def dx_dt(x,t=0):
+    def dx_dt(t,x):
         r = np.zeros( (nr,) )
         for i in range(nr):
             for j in range(n):
@@ -63,10 +63,18 @@ def simulate(a, timescale, steps=1000, logx=True):
         return np.dot(S,r)
 
     if logx:
+        mx = timescale
         t = np.logspace(0, timescale, steps)
     else:
-        t = np.linspace(0, 10**timescale, steps)
-    return t,integrate.odeint(dx_dt, x0, t, mxstep=5000),index_nodes
+        mx = 10**timescale
+        t = np.linspace(0, mx, steps)
+    
+    if method is None:
+        method = 'LSODA'
+    
+    sol = integrate.solve_ivp(dx_dt, (0,t[-1]), x0, method=method, t_eval=t)
+    
+    return sol,index_nodes
 
 
 def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
@@ -99,9 +107,9 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
         return plt
 
 
-def simulate_and_plot(a, timescale, steps=1000, save=None):
-    t,X,labels = simulate(a, timescale, steps=steps)
-    return plot_trace(X, save, time=t, logy=False, logx=True,labels=labels)
+def simulate_and_plot(a, timescale, steps=1000, save=None, method=None):
+    sol,labels = simulate(a, timescale, steps=steps, method=method)
+    return plot_trace(sol.y.transpose(), save, time=sol.t, logy=False, logx=True,labels=labels)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
