@@ -18,7 +18,7 @@ def save_graph(G, filename):
         f.write(b'source;target;weight\n')
         nx.readwrite.edgelist.write_weighted_edgelist(G, f, delimiter=';')
 
-def prune( G ):
+def prune( G, debug=False ):
     """Given a digraph G, construct and return a pruned version of G
        keeping only the single fastest out-going edge for each node""" 
     fastest_edge_list = []
@@ -26,7 +26,7 @@ def prune( G ):
         edges = G.out_edges(node,data='weight')
         if edges:
             fastest = min( edges, key=lambda x:x[2] )
-            check_unique(edges, fastest[2])
+            check_unique(edges, fastest[2], debug)
             fastest_edge_list.append(fastest)
 
     #creates and returns the pruned graph out of the list of the fastest edges
@@ -84,7 +84,7 @@ def renorm( cycle_edges, out_edges, lim_step ):
 #Given G and one of its cycle, returns a graph for which the cycle is glued,
 #i.e. supressed and replaced by a new vertex whose label will be this of
 #the limiting step (origin).
-def glue_cycle( pruned_G, restored_G, cycle ):
+def glue_cycle( pruned_G, restored_G, cycle, debug=False ):
     #creates the in and out lists of edges of the given pruned graph's cycle
     H = pruned_G.subgraph(cycle)
     cycle_edges = H.edges(data='weight')
@@ -93,7 +93,7 @@ def glue_cycle( pruned_G, restored_G, cycle ):
     #with the limiting step, renormalize the out edges 
     #and redirect the in edges
     lim_step = max( cycle_edges, key=lambda x:x[2] )
-    check_unique(cycle_edges, lim_step[2])
+    check_unique(cycle_edges, lim_step[2], debug)
     out_edges = select_unique_edges( renorm( cycle_edges, out_list, lim_step ) )
     in_edges = select_unique_edges( redirect( in_list, lim_step[0] ) )
     #creates the glued graph by taking the restored graph and replacing
@@ -122,18 +122,18 @@ def select_unique_edges(edges):
     return edges
 
 #Returns the glued graph obtained by gluing every cycle of the pruned graph.
-def glue_graph( pruned_G, restored_G ):
+def glue_graph( pruned_G, restored_G, debug=False ):
     glued_G = restored_G.copy()
     cycles_list = list( nx.simple_cycles(pruned_G) )
     for cycle in cycles_list:
-        glued_G = glue_cycle( pruned_G, glued_G, cycle )
+        glued_G = glue_cycle( pruned_G, glued_G, cycle, debug )
     return glued_G
 
 #Compute the pruned graph of G then restore the out edges of its cycles,
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
 #together with all its successive glued graphs (but not pruned).
-def glue( G ):
+def glue( G, debug=False ):
     L = []
     i = 0
     L.append(G)
@@ -141,7 +141,7 @@ def glue( G ):
         i += 1
         pruned_i = prune( L[i-1] )
         restored_i = restore_cycles_out_edges( L[i-1], pruned_i )
-        L.append( glue_graph( pruned_i, restored_i ) )
+        L.append( glue_graph( pruned_i, restored_i, debug=debug ) )
     L[0] = prune(G)
     return L
 
@@ -157,7 +157,7 @@ def glued_nodes_list( G ):
 # * restore cycle edges, except the limiting one (slowest, i.e. with highest weight)
 # * edges going out of the unglued cycles are rerouted to go out of the limiting node
 # * edges entering the cycle should enter on the same node as in the original graph
-def unglue_stack( stack ):
+def unglue_stack( stack, debug=False ):
     prev = stack.pop()
     G = prev.copy()
     while stack:
@@ -165,7 +165,8 @@ def unglue_stack( stack ):
         incomings = nx.get_node_attributes( prev, 'glued_in' )
         outgoings = nx.get_node_attributes( prev, 'glued_out' )
         L = glued_nodes_list(prev)
-        print( "ungluing:", cycles )
+        if debug:
+            print( "ungluing:", cycles )
         prev = stack.pop()
         removed_nodes = [ n for n in L ]
         added_edges = []
@@ -178,11 +179,12 @@ def unglue_stack( stack ):
             cur_incoming = G.in_edges(i, data='weight')
             cycle = [e[0] for e in cycle_edges]
             lim_step = max( cycle_edges, key=lambda x:x[2] )
-            check_unique(cycle_edges, lim_step[2])
+            check_unique(cycle_edges, lim_step[2], debug)
             lim_node = lim_step[0]
             added_edges += [ e for e in cycle_edges if e != lim_step ]
             
-            print('    %s (lim:%s)  ' % (i, lim_node), added_edges)
+            if debug:
+                print('    %s (lim:%s)  ' % (i, lim_node), added_edges)
             
             # Keep the current outgoing edges (going out of the limiting node)
             # only if they do not go toward another glued cycle (avoiding duplicating it)
@@ -190,12 +192,14 @@ def unglue_stack( stack ):
             if i == lim_node:
                 added_edges += cur_outgoing
             else: # should not happen: the cylce is glued on the limiting node
-                print( 'REDIRECT OUTGOING' )
+                if debug:
+                    print( 'REDIRECT OUTGOING' )
                 for edge in cur_outgoing:
                     added_edges.append( (lim_node, edge[1], edge[2]) )
             
             # Restore incoming arcs: merge current and before gluing information
-            print('    Restore incoming edges', cur_incoming, cycle_incoming)
+            if debug:
+                print('    Restore incoming edges', cur_incoming, cycle_incoming)
             for e in cur_incoming:
                 cur_s, cur_t, cur_w = e
                 for glued_s, glued_t, glued_w in cycle_incoming:
@@ -206,7 +210,8 @@ def unglue_stack( stack ):
                         added_edges.append( (cur_s, glued_t, glued_w) )
                         break
         
-        print('    Ready to unglue:', removed_nodes, added_edges)
+        if debug:
+            print('    Ready to unglue:', removed_nodes, added_edges)
         G.remove_nodes_from(removed_nodes)
         G.add_weighted_edges_from( added_edges )
     
@@ -260,28 +265,9 @@ def left_vector( G ):
                     break
     return M
 
-def show_graph(G, label=False):
-    if label: print(label)
-    print(G.nodes())
-    for s,t,w in G.edges(data='weight'):
-        print( s,t,w )
-    print()
+def reduce_graph( G, debug=False ):
+    return unglue_stack( glue(G), debug )
 
-def reduce_graph( G ):
-    return unglue_stack( glue(G) )
-
-def check_unique(edges, best):
-    count = 0
-    for v in edges:
-        if v[2] == best:
-            if count:
-                print("Duplicated best edge")
-                raise DuplicateMinError()
-            count += 1
-
-class DuplicateMinError(Exception):
-    def __init__(self, info):
-        self.info = info
 
 def draw_graph( G , file, drawformat, layout):
     AG = nx.nx_agraph.to_agraph(G)
@@ -322,12 +308,13 @@ def plot_graph(G, node_color='lightgray', edge_color='black', edge_labels=None, 
         plt.savefig(save)
     return fig,pos
 
-def check_unique(edges, best):
+def check_unique(edges, best, debug=False):
     count = 0
     for v in edges:
         if v[2] == best:
             if count:
-                print("Duplicated best edge")
+                if debug:
+                    print("Duplicated best edge")
                 raise DuplicateMinError()
             count += 1
 

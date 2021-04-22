@@ -77,12 +77,11 @@ def simulate(a, timescale, steps=1000, logx=True, method=None):
     return sol,index_nodes
 
 
-def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
+def plot_trace(trace, time, name=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
     if time is None:
         time = np.arange(len(trace))
-    trace = trace.transpose()
     f1 = plt.figure()
     idx=0
     for data in trace:
@@ -107,9 +106,9 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
         return plt
 
 
-def simulate_and_plot(a, timescale, steps=1000, save=None, method=None):
+def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None):
     sol,labels = simulate(a, timescale, steps=steps, method=method)
-    return plot_trace(sol.y.transpose(), save, time=sol.t, logy=False, logx=True,labels=labels)
+    return plot_trace(sol.y, sol.t, save, logy=False, logx=True,labels=labels, title=title)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
