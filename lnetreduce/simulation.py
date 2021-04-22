@@ -74,17 +74,16 @@ def simulate(a, timescale, steps=1000, logx=True, method=None):
     
     sol = integrate.solve_ivp(dx_dt, (0,t[-1]), x0, method=method, t_eval=t)
     
-    return sol,index_nodes
+    sol.labels = index_nodes
+    return sol
 
 
-def plot_trace(trace, time, name=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
+def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
     if time is None:
         time = np.arange(len(trace))
-    f1 = plt.figure()
-    idx=0
-    for data in trace:
+    for idx,data in enumerate(trace):
         style = styles[ int(idx / 7) ]
         if labels: label = labels[idx]
         else: label="x%s" % (idx)
@@ -93,22 +92,16 @@ def plot_trace(trace, time, name=None, labels=None, logx=False, logy=True, ylabe
             plt.xscale('log')
         if logy:
             plt.yscale('log')
-        idx += 1
     plt.grid()
     lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.xlabel('time')
     plt.ylabel(ylabel)
     if title: plt.title(title)
-    if name:
-        f1.savefig('%s.png' % name, bbox_extra_artists=(lgd,), bbox_inches='tight')
-        plt.close(f1)
-    else:
-        return plt
 
 
 def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None):
-    sol,labels = simulate(a, timescale, steps=steps, method=method)
-    return plot_trace(sol.y, sol.t, save, logy=False, logx=True,labels=labels, title=title)
+    sol = simulate(a, timescale, steps=steps, method=method)
+    plot_trace(sol.y, sol.t, sol.labels, title=title)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

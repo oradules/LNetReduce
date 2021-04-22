@@ -269,18 +269,7 @@ def reduce_graph( G, debug=False ):
     return unglue_stack( glue(G), debug )
 
 
-def draw_graph( G , file, drawformat, layout):
-    AG = nx.nx_agraph.to_agraph(G)
-    LE = AG.edges()
-    for a,b in LE:
-        AG.remove_edge(u=a,v=b)
-    for c,d,w in G.edges(data=True):
-        AG.add_edge(u=c,v=d, label=w['weight'])
-    AG.draw(path=file,format=drawformat,prog=layout,args="-Nheight=0.3 -Nwidth=0.3")
-
-
 def plot_graph(G, node_color='lightgray', edge_color='black', edge_labels=None, layout='neato', curve=False, save=None):
-    fig = plt.figure()
     node_names = [ n for n in G ]
     if isinstance(layout, str):
         pos = nx.nx_pydot.graphviz_layout(G, prog=layout)
@@ -304,9 +293,15 @@ def plot_graph(G, node_color='lightgray', edge_color='black', edge_labels=None, 
             edge_labels = nx.get_edge_attributes(G, edge_labels)
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color=edge_color, label_pos=0.65, font_size=16)
     
-    if save and isinstance(save, str):
-        plt.savefig(save)
-    return fig,pos
+    return pos
+
+def permute_timescales(G):
+    edge_labels = nx.get_edge_attributes(G, 'weight')
+    vals = list(edge_labels.values())
+    perm = np.random.permutation(len(vals))
+    for i,e in enumerate(edge_labels):
+        edge_labels[e] = vals[perm[i]]
+    nx.set_edge_attributes(G, edge_labels, 'weight')
 
 def check_unique(edges, best, debug=False):
     count = 0
