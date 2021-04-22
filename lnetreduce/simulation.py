@@ -71,12 +71,20 @@ def simulate(a, timescale, steps=1000, logx=True, method=None):
     
     if method is None:
         method = 'LSODA'
+    elif method == 'odeint':
+        X = integrate.odeint(dx_dt, x0, t, mxstep=5000, tfirst=True).transpose()
+        return MSol(X,t,index_nodes)
     
     sol = integrate.solve_ivp(dx_dt, (0,t[-1]), x0, method=method, t_eval=t)
     
     sol.labels = index_nodes
     return sol
 
+class MSol:
+    def __init__(self, y,t,labels):
+        self.t = t
+        self.y = y
+        self.labels = labels
 
 def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
