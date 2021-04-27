@@ -122,7 +122,7 @@ def select_unique_edges(edges):
     return edges
 
 #Returns the glued graph obtained by gluing every cycle of the pruned graph.
-def glue_graph( pruned_G, restored_G, debug=False ):
+def glue_graph( pruned_G, restored_G, debug=False, partial=False ):
     glued_G = restored_G.copy()
     cycles_list = list( nx.simple_cycles(pruned_G) )
     for cycle in cycles_list:
@@ -133,15 +133,25 @@ def glue_graph( pruned_G, restored_G, debug=False ):
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
 #together with all its successive glued graphs (but not pruned).
-def glue( G, debug=False ):
+def glue( G, debug=False, partial=False ):
     L = []
     i = 0
     L.append(G)
-    while list( nx.simple_cycles( prune(L[i]) ) ) != []:
+    while True:
+        g_i = L[i]
+        pruned_i = prune( g_i )
+        cycles_i = list( nx.simple_cycles( pruned_i ) )
+        if len(cycles_i) == 0: break
+        restored_i = restore_cycles_out_edges( g_i, pruned_i )
+        try:
+            L.append( glue_graph( pruned_i, restored_i, debug=debug, partial=partial ) )
+        except:
+            if not partial: raise
+            # TODO: can we still glue the remaining cycles?
+            print("Failed to glue one cycle")
+            L[0] = prune(G)
+            return L
         i += 1
-        pruned_i = prune( L[i-1] )
-        restored_i = restore_cycles_out_edges( L[i-1], pruned_i )
-        L.append( glue_graph( pruned_i, restored_i, debug=debug ) )
     L[0] = prune(G)
     return L
 
@@ -265,8 +275,8 @@ def left_vector( G ):
                     break
     return M
 
-def reduce_graph( G, debug=False ):
-    return unglue_stack( glue(G), debug )
+def reduce_graph( G, debug=False, partial=False ):
+    return unglue_stack( glue(G, debug=debug, partial=partial), debug=debug )
 
 
 def plot_graph(G, node_color='lightgray', edge_color='black', edge_labels=None, layout='neato', curve=False, save=None):
@@ -310,7 +320,7 @@ def check_unique(edges, best, debug=False):
             if count:
                 if debug:
                     print("Duplicated best edge")
-                raise DuplicateMinError()
+                raise DuplicateMinError((best,edges))
             count += 1
 
 class DuplicateMinError(Exception):
