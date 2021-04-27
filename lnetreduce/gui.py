@@ -5,7 +5,9 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from os.path import basename
 import os
-
+import pandas as pd
+import numpy as np
+import networkx as nx
 
 import lnetreduce
 
@@ -305,13 +307,13 @@ class Interface(Frame):
             format = self.networkInitWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
             savename = self.work_folder+"/"+basename(filename) + "input_graph" + "." + format 
-            input_G = lnetreduce.load(filename)
+            input_G = lnetreduce.load_graph(filename)
             if self.networkInitWindow.Layout_CB.get()!="":
                 layout = self.networkInitWindow.Layout_CB.get()
-                draw_graph(input_G,savename,format,layout) 
+                lnetreduce.reduction.draw_graph(input_G,savename,format,layout) 
             else:
                 layout="dot"
-                draw_graph(input_G,savename,format,layout)
+                lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
              
         else:
             showwarning(message='Please select format', )
@@ -392,13 +394,13 @@ class Interface(Frame):
             format = self.networkReducedWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
             savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
-            u_G=load('%s_reduced.tsv' % filename)
+            u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
             if self.networkReducedWindow.Layout_CB.get()!="":
                 layout = self.networkReducedWindow.Layout_CB.get()
-                draw_graph(u_G,savename,format,layout) 
+                lnetreduce.reduction.draw_graph(u_G,savename,format,layout) 
             else:
                 layout="dot"
-                draw_graph(input_G,savename,format,layout)
+                lnetreduce.reduction.draw_graph(u_G,savename,format,layout)
              
         else:
             showwarning(message='Please select format', )
@@ -406,15 +408,16 @@ class Interface(Frame):
     def cliquerVector(self):
         
     	self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-    	savename = self.work_folder+"/"+basename(filename) + "reduced_" 
-    	u_G=lnetreduce.load('%s_reduced.tsv' % filename)
-    	R = right_vector(u_G)
-    	L = left_vector(u_G)
-    	with open(savename+"right_vector.txt","w") as f:
-    	    f.write(str(R))
-    	with open(savename+"left_vector.txt","w") as g:
-    	    g.write(str(L))
-            
+    	savename = self.work_folder+"/"+basename(filename) + "reduced" 
+    	generateVectors(savename)
+def generateVectors(savename):
+    u_G=lnetreduce.load_graph(filename)
+    R = right_vector(u_G)
+    L = left_vector(u_G)
+    with open(savename+"right_vector.txt","w") as f:
+        f.write(str(R))
+    with open(savename+"left_vector.txt","w") as g:
+        g.write(str(L))            
 
 def reductionpy(filename):
     input_G = lnetreduce.load_graph(filename)
@@ -438,4 +441,35 @@ def launch_gui():
     interface = Interface(fenetre)
     fenetre.title("LNetReduce")
     interface.mainloop()
+
+def right_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
+    M = np.zeros( (G.size(),G.order()), int )
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][node_to_index[e[0]]] = 1
+        w = e[2]
+        dfs = list( lnetreduce.nx.edge_dfs(G,e) )
+        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > w]
+        if L != []:
+            M[i][ node_to_index[L[0][0]] ] = -1
+        else:
+            M[i][ node_to_index[dfs[-1][1]] ] = -1
+    return M
+
+def left_vector( G ):
+    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
+    M = np.zeros( (G.size(),G.order()), int )
+    for i,e in enumerate( G.edges(data='weight') ):
+        M[i][ node_to_index[e[0]] ] = 1
+        v = G.get_edge_data(*e)['weight']
+        H = G.reverse()
+        dfs = list( nx.edge_dfs(H,e[0]) )
+        if dfs != []:
+            for f in dfs:
+                if H.get_edge_data(*f)['weight'] < v:
+                    M[i][ node_to_index[f[1]] ] = 1
+                else:
+                    break
+    return M
+
     
