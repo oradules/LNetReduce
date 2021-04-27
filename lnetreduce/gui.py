@@ -3,11 +3,15 @@ from tkinter import *
 from tkinter.messagebox import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+from matplotlib import pyplot as plt
+import numpy as np
+import tempfile
 from os.path import basename
+import io
 import os
 import pandas as pd
-import numpy as np
-import networkx as nx
+
+
 
 import lnetreduce
 
@@ -122,8 +126,8 @@ class Interface(Frame):
     def cliquerSimulation(self):
         global Timescale_value_init
         Timescale_value_init=5
-        #os.system("python3 simulate.py "+filename+" 5")
-        simulatepy(filename, Timescale_value_init)
+
+        imageo = simulatepy(filename, Timescale_value_init)
 
         #change timescale block
         self.resultInit=Toplevel(master=fenetre)
@@ -145,7 +149,6 @@ class Interface(Frame):
         self.resultInit.frameImage=Frame(master=self.resultInit)
         self.resultInit.frameImage.pack()
 
-        imageo=Image.open(filename+".png")
         resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
         self.resultInit.canva=Canvas(self.resultInit.frameImage,width=resultsimu.width(),height=resultsimu.height())
         self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
@@ -158,9 +161,7 @@ class Interface(Frame):
         #os.system("python3 simulate.py "+filename+" "+self.resultInit.Entry_number.get())
         print( self.resultInit.Entry_number.get())
         if self.resultInit.Entry_number.get()!="":
-            simulatepy(filename, self.resultInit.Entry_number.get())
-        
-            imageo=Image.open(filename+".png")
+            imageo = simulatepy(filename, self.resultInit.Entry_number.get())
 
             resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
         
@@ -189,7 +190,7 @@ class Interface(Frame):
 
         global Timescale_value
         Timescale_value=5
-        simulatepy(filename+"_reduced.tsv", Timescale_value)
+        imageo = simulatepy(filename+"_reduced.tsv", Timescale_value)
         #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
         self.result=Toplevel(master=fenetre)
         self.result.title("Reduced model simulation")
@@ -211,7 +212,6 @@ class Interface(Frame):
         self.result.frameImage=Frame(master=self.result)
         self.result.frameImage.pack()
 
-        imageo=Image.open(filename+"_reduced.tsv.png")
         resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
         self.result.canva=Canvas(self.result.frameImage,width=resultsimu.width(),height=resultsimu.height())
         self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
@@ -222,8 +222,7 @@ class Interface(Frame):
     def cliquerChangeTimescaleReduced(self):
         #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
         if self.result.Entry_number.get()!="":
-            simulatepy(filename+"_reduced.tsv", self.result.Entry_number.get())
-            imageo=Image.open(filename+"_reduced.tsv.png")
+            imageo = simulatepy(filename+"_reduced.tsv", self.result.Entry_number.get())
             resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
             self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
             self.result.canva.image=resultsimu
@@ -234,8 +233,7 @@ class Interface(Frame):
         FormatValue='png'
         input_G = lnetreduce.load_graph(filename)
         savename = filename + "input_graph" + "." + FormatValue
-        lnetreduce.reduction.draw_graph(input_G,savename,'png','dot')
-        #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
+        imageo = draw_graph(input_G,savename,'neato')
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
         
@@ -260,11 +258,7 @@ class Interface(Frame):
         self.networkInitWindow.frameImage=Frame(master=self.networkInitWindow)
         self.networkInitWindow.frameImage.pack()
 
-        imageo=Image.open(savename)
         resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-        #resultNetwork.resize(500,800)
-        #resultNetwork.zoom(500,500)
-        #resultNetwork=resultNetwork._PhotoImage__photo.zoom(4)
         self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
         self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkInitWindow.canva.image=resultNetwork
@@ -288,26 +282,30 @@ class Interface(Frame):
         format='png'
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()
-        layout='dot'
+        layout='neato'
         if self.networkInitWindow.Layout_CB.get()!="":
             layout = self.networkInitWindow.Layout_CB.get()
         savename = filename + "input_graph" + "." + format
+
         lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
         imageo=Image.open(savename)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+
         self.networkInitWindow.canva.delete("all")
         self.networkInitWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
         self.networkInitWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkInitWindow.canva.image=resultNetwork
         self.networkInitWindow.canva.pack(fill=BOTH)
-        
+
+
     def cliquerFolder(self):   
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
             savename = self.work_folder+"/"+basename(filename) + "input_graph" + "." + format 
             input_G = lnetreduce.load_graph(filename)
+
             if self.networkInitWindow.Layout_CB.get()!="":
                 layout = self.networkInitWindow.Layout_CB.get()
                 lnetreduce.reduction.draw_graph(input_G,savename,format,layout) 
@@ -315,6 +313,7 @@ class Interface(Frame):
                 layout="dot"
                 lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
              
+
         else:
             showwarning(message='Please select format', )
 
@@ -323,7 +322,7 @@ class Interface(Frame):
         LayoutValue='dot'
         u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
         rsavename = filename + "reduced_graph" + ".png"
-        lnetreduce.reduction.draw_graph(u_G,rsavename,'png','dot')
+        imageo = draw_graph(u_G,rsavename,'neato')
 
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
@@ -347,7 +346,6 @@ class Interface(Frame):
         self.networkReducedWindow.frameImage=Frame(master=self.networkReducedWindow)
         self.networkReducedWindow.frameImage.pack()
 
-        imageo=Image.open(rsavename)
         resultNetwork= ImageTk.PhotoImage(imageo,width=1000,height=1200)
         self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
         self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
@@ -373,31 +371,36 @@ class Interface(Frame):
         format='png'
         if self.networkReducedWindow.Format_CB.get()!="":
             format = self.networkReducedWindow.Format_CB.get()
-        layout='dot'
+        layout='neato'
         if self.networkReducedWindow.Layout_CB.get()!="":
             layout = self.networkReducedWindow.Layout_CB.get()
         rsavename = filename + "reduced_graph" + "." + format
+
         lnetreduce.reduction.draw_graph(u_G,rsavename,format,layout)
         
         imageo=Image.open(rsavename)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
+
         self.networkReducedWindow.canva.delete("all")
         self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
         self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
         self.networkReducedWindow.canva.image=resultNetwork
         self.networkReducedWindow.canva.pack(fill=BOTH)
-        
+
+
 
     def cliquerFolderReduced(self):   
         if self.networkReducedWindow.Format_CB.get()!="":
             format = self.networkReducedWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
             savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
+
             u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
             if self.networkReducedWindow.Layout_CB.get()!="":
                 layout = self.networkReducedWindow.Layout_CB.get()
                 lnetreduce.reduction.draw_graph(u_G,savename,format,layout) 
+
             else:
                 layout="dot"
                 lnetreduce.reduction.draw_graph(u_G,savename,format,layout)
@@ -405,11 +408,11 @@ class Interface(Frame):
         else:
             showwarning(message='Please select format', )
 
-    def cliquerVector(self):
-        
+    def cliquerVector(self):        
     	self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
     	savename = self.work_folder+"/"+basename(filename) + "reduced" 
     	generateVectors(savename)
+
 def generateVectors(savename):
     u_G=lnetreduce.load_graph(filename)
     R = right_vector(u_G)
@@ -419,13 +422,13 @@ def generateVectors(savename):
     with open(savename+"left_vector.txt","w") as g:
         g.write(str(L))            
 
+
 def reductionpy(filename):
     input_G = lnetreduce.load_graph(filename)
     try:
         u_G = lnetreduce.reduce_graph( input_G )
     except:
-        print( "Sorry, this instance is not reducible because its reduced \
-             form has non separated reaction speeds" )
+        print( "Sorry, this instance is not reducible because its reduced form has non separated reaction speeds" )
         sys.exit()
 
     lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
@@ -433,7 +436,28 @@ def reductionpy(filename):
 
 def simulatepy(_filename, _timescale):
     timescale = int(_timescale)
-    lnetreduce.simulate_and_plot(_filename, timescale, steps=1000, save=_filename)
+    fig = plt.figure()
+    lnetreduce.simulate_and_plot(_filename, timescale)
+    return fig_to_image(fig)
+
+def fig_to_image(fig, buffer=False):
+    if buffer:
+        io_buf = io.BytesIO()
+        fig.savefig(io_buf, format='raw')
+        io_buf.seek(0)
+        img = Image.fromarray( np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
+                             newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1)) )
+        io_buf.close()
+        return img
+    # save and load from a tmp file
+    tf = tempfile.TemporaryFile(suffix='.png')
+    fig.savefig(tf, format='png')
+    return Image.open(tf)
+
+def draw_graph( G, filename, layout):
+    fig = plt.figure()
+    lnetreduce.plot_graph(G, layout=layout)
+    return fig_to_image(fig)
 
 def launch_gui():
     global fenetre
