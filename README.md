@@ -42,11 +42,11 @@ A Python API is also available, see the included jupyter-notebooks for examples.
 
 1. Input file format
 
-	• The model is presented as a table with three columns: "source" "target" "weight"
-	• The weights must be positive integers or zero; if this is not the case, substract the lowest label from all the labels
-	• The source and target nodes can be symbols
+	• The model is presented as a table with three columns: "source" "target" "weight".
+	• The weights must be positive integers or zero; if this is not the case, substract the lowest label from all the labels.
+	• The source and target nodes can be symbols.
 	• E.g. source = A0, target = A1, weight = 1 means that the model contains an edge (A0,A1) of rate constant epsilon^1. 
-	• By default epsilon = 1/10, and can not be changed in this version
+	• By default epsilon = 1/10, and can not be changed in this version.
 
 2. Reduction
 
