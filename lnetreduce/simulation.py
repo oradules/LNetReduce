@@ -12,7 +12,7 @@ def load(filename):
 def graph_to_sim(G):
     return [ np.asarray(A) for A in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
 
-def simulate(a, timescale, steps=1000, logx=True):
+def simulate(a, timescale, steps=1000, logx=True, method=None):
     if isinstance(a, nx.Graph):
         a = graph_to_sim(a)
     elif isinstance(a, str):
@@ -54,7 +54,7 @@ def simulate(a, timescale, steps=1000, logx=True):
     x0 = np.ones( (n,) )
 
     # construct the update function
-    def dx_dt(x,t=0):
+    def dx_dt(t,x):
         r = np.zeros( (nr,) )
         for i in range(nr):
             for j in range(n):
@@ -63,21 +63,35 @@ def simulate(a, timescale, steps=1000, logx=True):
         return np.dot(S,r)
 
     if logx:
+        mx = timescale
         t = np.logspace(0, timescale, steps)
     else:
-        t = np.linspace(0, 10**timescale, steps)
-    return t,integrate.odeint(dx_dt, x0, t, mxstep=5000),index_nodes
+        mx = 10**timescale
+        t = np.linspace(0, mx, steps)
+    
+    if method is None:
+        method = 'LSODA'
+    elif method == 'odeint':
+        X = integrate.odeint(dx_dt, x0, t, mxstep=5000, tfirst=True).transpose()
+        return MSol(X,t,index_nodes)
+    
+    sol = integrate.solve_ivp(dx_dt, (0,t[-1]), x0, method=method, t_eval=t)
+    
+    sol.labels = index_nodes
+    return sol
 
+class MSol:
+    def __init__(self, y,t,labels):
+        self.t = t
+        self.y = y
+        self.labels = labels
 
-def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, ylabel='concentration', title=None):
+def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentration', title=None):
     styles = ( "-","--", "-.", ":" )
     colors = ('b', 'g', 'r', 'c', 'm', 'y', 'k')
     if time is None:
         time = np.arange(len(trace))
-    trace = trace.transpose()
-    f1 = plt.figure()
-    idx=0
-    for data in trace:
+    for idx,data in enumerate(trace):
         style = styles[ int(idx / 7) ]
         if labels: label = labels[idx]
         else: label="x%s" % (idx)
@@ -86,22 +100,16 @@ def plot_trace(trace, name=None, time=None, labels=None, logx=False, logy=True, 
             plt.xscale('log')
         if logy:
             plt.yscale('log')
-        idx += 1
     plt.grid()
     lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.xlabel('time')
     plt.ylabel(ylabel)
     if title: plt.title(title)
-    if name:
-        f1.savefig('%s.png' % name, bbox_extra_artists=(lgd,), bbox_inches='tight')
-        plt.close(f1)
-    else:
-        return plt
 
 
-def simulate_and_plot(a, timescale, steps=1000, save=None):
-    t,X,labels = simulate(a, timescale, steps=steps)
-    return plot_trace(X, save, time=t, logy=False, logx=True,labels=labels)
+def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None):
+    sol = simulate(a, timescale, steps=steps, method=method)
+    plot_trace(sol.y, sol.t, sol.labels, title=title)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
