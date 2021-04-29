@@ -234,7 +234,7 @@ class Interface(Frame):
         FormatValue='png'
         input_G = lnetreduce.load_graph(filename)
         savename = filename + "input_graph" + "." + FormatValue
-        imageo = draw_graph(input_G,savename,'neato',True,None)
+        imageo = draw_graph(input_G,'neato',True,None)
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
         
@@ -289,7 +289,7 @@ class Interface(Frame):
         savename = filename + "input_graph" + "." + format
 
         
-        imageo=draw_graph(input_G,savename,layout,True,None)
+        imageo=draw_graph(input_G,layout,True,None)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
@@ -301,29 +301,29 @@ class Interface(Frame):
 
 
     def cliquerFolder(self):   
-        if self.networkInitWindow.Format_CB.get()!="":
-            format = self.networkInitWindow.Format_CB.get()   
-            self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+"/"+basename(filename) + "input_graph." + self.networkInitWindow.Format_CB.get()
-            input_G = lnetreduce.load_graph("models/flower_2.csv")
+        if self.networkInitWindow.Format_CB.get() in ["dot","pdf","png","svg"]:
+            
+            if self.networkInitWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
+                format = self.networkInitWindow.Format_CB.get()   
+                self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+                savename = self.work_folder+"/"+basename(filename) + "input_graph." + self.networkInitWindow.Format_CB.get()
+                input_G = lnetreduce.load_graph("models/flower_2.csv")
 
-            if self.networkInitWindow.Layout_CB.get()!="":
                 layout = self.networkInitWindow.Layout_CB.get()
-                draw_graph(input_G,format,layout,True,savename)
+                draw_graph(input_G,layout,True,savename)
             else:
-                layout="dot"
-                draw_graph(input_G,format,layout,True,savename)
+                showwarning(message='Please select an existing layout', )
              
 
         else:
-            showwarning(message='Please select format', )
+            showwarning(message='Please select a correct format', )
 
 
     def cliquerNetwork_reduced(self):
         LayoutValue='dot'
         u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
         rsavename = filename + "reduced_graph" + ".png"
-        imageo = draw_graph(u_G,rsavename,'neato',False)
+        imageo = draw_graph(u_G,'neato',False,None)
 
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
@@ -370,39 +370,40 @@ class Interface(Frame):
         #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
         u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
 
-        layout='neato'
-        if self.networkReducedWindow.Layout_CB.get()!="":
+        if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
             layout = self.networkReducedWindow.Layout_CB.get()
         
-        imageo=draw_graph(u_G,rsavename,layout,False)
+            imageo=draw_graph(u_G,layout,False,None)
 
-        resultNetwork= ImageTk.PhotoImage(imageo)
+            resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
-        self.networkReducedWindow.canva.delete("all")
-        self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
-        self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
-        self.networkReducedWindow.canva.image=resultNetwork
-        self.networkReducedWindow.canva.pack(fill=BOTH)
+            self.networkReducedWindow.canva.delete("all")
+            self.networkReducedWindow.canva.config(width=resultNetwork.width(),height=resultNetwork.height())
+            self.networkReducedWindow.canva.create_image(0,0,anchor=NW,image=resultNetwork)
+            self.networkReducedWindow.canva.image=resultNetwork
+            self.networkReducedWindow.canva.pack(fill=BOTH)
+        else:
+            showwarning(message='Please select an existing layout', )
 
 
 
     def cliquerFolderReduced(self):   
-        if self.networkReducedWindow.Format_CB.get()!="":
-            format = self.networkReducedWindow.Format_CB.get()   
-            self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
+        if self.networkReducedWindow.Format_CB.get() in ["dot","pdf","png","svg"]:
 
-            u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
-            if self.networkReducedWindow.Layout_CB.get()!="":
+            if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
+                format = self.networkReducedWindow.Format_CB.get()   
+                self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+                savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
+                u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
                 layout = self.networkReducedWindow.Layout_CB.get()
-                draw_graph(u_G,savename,layout,True) 
+                draw_graph(u_G,layout,True,savename) 
 
             else:
-                showwarning(message='Please select Layout', )
+                showwarning(message='Please select an existing layout', )
              
         else:
-            showwarning(message='Please select format', )
+            showwarning(message='Please select a correct format', )
 
     def cliquerVector(self):        
     	self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
@@ -452,7 +453,7 @@ def fig_to_image(fig, buffer=False,save=None):
         fig.savefig(save)
     return Image.open(tf)
 
-def draw_graph( G, filename, layout,curve,path  ):
+def draw_graph( G, layout,curve,path  ):
     fig = plt.figure()
     lnetreduce.plot_graph(G, edge_labels=True, curve=curve,layout=layout) 
 
