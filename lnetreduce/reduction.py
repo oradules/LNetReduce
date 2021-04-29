@@ -1,11 +1,7 @@
-import sys
-import csv
 import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import pygraphviz as pgv
-#import pydot
 
 def load( filename):
     "Load a weighted graph from a file where each line encodes an arc as a triplet (source;target;weight)."
@@ -18,7 +14,7 @@ def save_graph(G, filename):
         f.write(b'source;target;weight\n')
         nx.readwrite.edgelist.write_weighted_edgelist(G, f, delimiter=';')
 
-def prune( G, debug=False ):
+def prune( G, debug=False, partial=False ):
     """Given a digraph G, construct and return a pruned version of G
        keeping only the single fastest out-going edge for each node""" 
     fastest_edge_list = []
@@ -26,8 +22,13 @@ def prune( G, debug=False ):
         edges = G.out_edges(node,data='weight')
         if edges:
             fastest = min( edges, key=lambda x:x[2] )
-            check_unique(edges, fastest[2], debug)
-            fastest_edge_list.append(fastest)
+            try:
+                check_unique(edges, fastest[2], debug)
+                fastest_edge_list.append(fastest)
+            except:
+                if not partial: raise
+                print("Fastest edge is not unique for ", node)
+                fastest_edge_list += edges
 
     #creates and returns the pruned graph out of the list of the fastest edges
     pruned_G = nx.DiGraph()
@@ -126,7 +127,10 @@ def glue_graph( pruned_G, restored_G, debug=False, partial=False ):
     glued_G = restored_G.copy()
     cycles_list = list( nx.simple_cycles(pruned_G) )
     for cycle in cycles_list:
-        glued_G = glue_cycle( pruned_G, glued_G, cycle, debug )
+        try:
+            glued_G = glue_cycle( pruned_G, glued_G, cycle, debug )
+        except:
+            if not partial: raise
     return glued_G
 
 #Compute the pruned graph of G then restore the out edges of its cycles,
@@ -134,25 +138,23 @@ def glue_graph( pruned_G, restored_G, debug=False, partial=False ):
 #simple cycle. Then returns the list composed of the original graph pruned
 #together with all its successive glued graphs (but not pruned).
 def glue( G, debug=False, partial=False ):
-    L = []
-    i = 0
-    L.append(G)
+    L = [ G ]
     while True:
-        g_i = L[i]
-        pruned_i = prune( g_i )
+        g_i = L[-1]
+        pruned_i = prune( g_i, partial=partial )
         cycles_i = list( nx.simple_cycles( pruned_i ) )
         if len(cycles_i) == 0: break
         restored_i = restore_cycles_out_edges( g_i, pruned_i )
-        try:
-            L.append( glue_graph( pruned_i, restored_i, debug=debug, partial=partial ) )
-        except:
-            if not partial: raise
-            # TODO: can we still glue the remaining cycles?
-            print("Failed to glue one cycle")
-            L[0] = prune(G)
-            return L
-        i += 1
-    L[0] = prune(G)
+        glued = glue_graph( pruned_i, restored_i, debug=debug, partial=partial )
+        if partial:
+            # Check if some cycles have been glued
+            cycles_n = list( nx.simple_cycles( glued ) )
+            if len( cycles_n) == len(cycles_i):
+                print("Failed to glue %s cycle" % len(cycles_n))
+                break
+        L.append( glued )
+
+    L[0] = prune(G, partial=partial)
     return L
 
 #Given a glued graph, returns the list of its glued nodes
@@ -276,6 +278,7 @@ def left_vector( G ):
     return M
 
 def reduce_graph( G, debug=False, partial=False ):
+    "Reduce the graph if timescales are properly separated"
     return unglue_stack( glue(G, debug=debug, partial=partial), debug=debug )
 
 
@@ -327,31 +330,4 @@ class DuplicateMinError(Exception):
     def __init__(self, info):
         self.info = info
 
-
-############################# Main ############################################
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print( 'usage:' )
-        print( sys.argv[0] + ' <filename>' )
-        sys.exit()
-
-    filename = sys.argv[1]
-    input_G = load(filename)
-    draw_graph(input_G,filename+"input_graph.png",'png','dot')
-
-    try:
-        u_G = reduce_graph( input_G )
-    except:
-        print( "Sorry, this instance is not reducible because its reduced \
-             form has non separated reaction speeds" )
-        sys.exit()
-
-    save_graph( u_G, '%s_reduced.tsv' % filename)
-    draw_graph(u_G, filename+"reduced_graph.png", 'png', 'dot')
-
-    # Compute the right and left vectors
-    R = right_vector(u_G)
-    L = left_vector(u_G)
-    print( L )
 
