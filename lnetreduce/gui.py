@@ -10,6 +10,7 @@ from os.path import basename
 import io
 import os
 import pandas as pd
+import networkx as nx
 
 
 
@@ -233,7 +234,7 @@ class Interface(Frame):
         FormatValue='png'
         input_G = lnetreduce.load_graph(filename)
         savename = filename + "input_graph" + "." + FormatValue
-        imageo = draw_graph(input_G,savename,'neato')
+        imageo = draw_graph(input_G,savename,'neato',True,None)
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
         
@@ -270,7 +271,7 @@ class Interface(Frame):
         self.networkInitWindow.SaveButton=Button(master=self.networkInitWindow.frameSave, text="Save",command=self.cliquerFolder,bg=self.color_button)
         self.networkInitWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
+        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["dot","pdf","png","svg"])
         self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameSave,text="Format :",bg=self.color)
@@ -287,8 +288,8 @@ class Interface(Frame):
             layout = self.networkInitWindow.Layout_CB.get()
         savename = filename + "input_graph" + "." + format
 
-        lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
-        imageo=Image.open(savename)
+        
+        imageo=draw_graph(input_G,savename,layout,True,None)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
@@ -303,15 +304,15 @@ class Interface(Frame):
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+"/"+basename(filename) + "input_graph" + "." + format 
-            input_G = lnetreduce.load_graph(filename)
+            savename = self.work_folder+"/"+basename(filename) + "input_graph." + self.networkInitWindow.Format_CB.get()
+            input_G = lnetreduce.load_graph("models/flower_2.csv")
 
             if self.networkInitWindow.Layout_CB.get()!="":
                 layout = self.networkInitWindow.Layout_CB.get()
-                lnetreduce.reduction.draw_graph(input_G,savename,format,layout) 
+                draw_graph(input_G,format,layout,True,savename)
             else:
                 layout="dot"
-                lnetreduce.reduction.draw_graph(input_G,savename,format,layout)
+                draw_graph(input_G,format,layout,True,savename)
              
 
         else:
@@ -322,7 +323,7 @@ class Interface(Frame):
         LayoutValue='dot'
         u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
         rsavename = filename + "reduced_graph" + ".png"
-        imageo = draw_graph(u_G,rsavename,'neato')
+        imageo = draw_graph(u_G,rsavename,'neato',False)
 
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
@@ -358,7 +359,7 @@ class Interface(Frame):
         self.networkReducedWindow.SaveButton=Button(master=self.networkReducedWindow.frameSave, text="Save",command=self.cliquerFolderReduced,bg=self.color_button)
         self.networkReducedWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["dot","gif","jpeg","jpg","pdf","png","ps","svg"])
+        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["dot","pdf","png","svg"])        
         self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameSave,text="Format :",bg=self.color)
@@ -368,17 +369,13 @@ class Interface(Frame):
     def cliquerChangeLayout_reduced(self):
         #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
         u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
-        format='png'
-        if self.networkReducedWindow.Format_CB.get()!="":
-            format = self.networkReducedWindow.Format_CB.get()
+
         layout='neato'
         if self.networkReducedWindow.Layout_CB.get()!="":
             layout = self.networkReducedWindow.Layout_CB.get()
-        rsavename = filename + "reduced_graph" + "." + format
-
-        lnetreduce.reduction.draw_graph(u_G,rsavename,format,layout)
         
-        imageo=Image.open(rsavename)
+        imageo=draw_graph(u_G,rsavename,layout,False)
+
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
@@ -399,11 +396,10 @@ class Interface(Frame):
             u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
             if self.networkReducedWindow.Layout_CB.get()!="":
                 layout = self.networkReducedWindow.Layout_CB.get()
-                lnetreduce.reduction.draw_graph(u_G,savename,format,layout) 
+                draw_graph(u_G,savename,layout,True) 
 
             else:
-                layout="dot"
-                lnetreduce.reduction.draw_graph(u_G,savename,format,layout)
+                showwarning(message='Please select Layout', )
              
         else:
             showwarning(message='Please select format', )
@@ -415,8 +411,8 @@ class Interface(Frame):
 
 def generateVectors(savename):
     u_G=lnetreduce.load_graph(filename)
-    R = right_vector(u_G)
-    L = left_vector(u_G)
+    R = lnetreduce.reduction.right_vector(u_G)
+    L = lnetreduce.reduction.left_vector(u_G)
     with open(savename+"right_vector.txt","w") as f:
         f.write(str(R))
     with open(savename+"left_vector.txt","w") as g:
@@ -440,24 +436,27 @@ def simulatepy(_filename, _timescale):
     lnetreduce.simulate_and_plot(_filename, timescale)
     return fig_to_image(fig)
 
-def fig_to_image(fig, buffer=False):
+def fig_to_image(fig, buffer=False,save=None):
     if buffer:
         io_buf = io.BytesIO()
         fig.savefig(io_buf, format='raw')
         io_buf.seek(0)
         img = Image.fromarray( np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
-                             newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1)) )
+        newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1)) )
         io_buf.close()
         return img
     # save and load from a tmp file
     tf = tempfile.TemporaryFile(suffix='.png')
     fig.savefig(tf, format='png')
+    if save!=None:
+        fig.savefig(save)
     return Image.open(tf)
 
-def draw_graph( G, filename, layout):
+def draw_graph( G, filename, layout,curve,path  ):
     fig = plt.figure()
-    lnetreduce.plot_graph(G, layout=layout)
-    return fig_to_image(fig)
+    lnetreduce.plot_graph(G, edge_labels=True, curve=curve,layout=layout) 
+
+    return fig_to_image(fig,save=path)
 
 def launch_gui():
     global fenetre
@@ -466,34 +465,6 @@ def launch_gui():
     fenetre.title("LNetReduce")
     interface.mainloop()
 
-def right_vector( G ):
-    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
-    M = np.zeros( (G.size(),G.order()), int )
-    for i,e in enumerate( G.edges(data='weight') ):
-        M[i][node_to_index[e[0]]] = 1
-        w = e[2]
-        dfs = list( lnetreduce.nx.edge_dfs(G,e) )
-        L = [f for f in dfs if G.get_edge_data(*f)['weight'] > w]
-        if L != []:
-            M[i][ node_to_index[L[0][0]] ] = -1
-        else:
-            M[i][ node_to_index[dfs[-1][1]] ] = -1
-    return M
 
-def left_vector( G ):
-    node_to_index = { n:i for i,n in enumerate(G.nodes()) }
-    M = np.zeros( (G.size(),G.order()), int )
-    for i,e in enumerate( G.edges(data='weight') ):
-        M[i][ node_to_index[e[0]] ] = 1
-        v = G.get_edge_data(*e)['weight']
-        H = G.reverse()
-        dfs = list( nx.edge_dfs(H,e[0]) )
-        if dfs != []:
-            for f in dfs:
-                if H.get_edge_data(*f)['weight'] < v:
-                    M[i][ node_to_index[f[1]] ] = 1
-                else:
-                    break
-    return M
 
     
