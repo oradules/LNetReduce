@@ -14,11 +14,13 @@ import networkx as nx
 
 
 
+
 import lnetreduce
 
 class Interface(Frame):
     global filename
     global Timescale_value
+    global work_folder
 
     """The main window.
     All widgets are stored as attributes in this window."""
@@ -92,7 +94,7 @@ class Interface(Frame):
         self.charge_reduced_simulation = Button(self.frame2, text="Simulation", command=self.cliquerSimulationReduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
         self.charge_reduced_simulation.grid(row=2, column=1,pady=(10,10),padx=40,sticky=W)
 
-        self.button_vectors=Button(self.frame2,bg=self.color_button,text="Save vectors",font=("Helvetica"),command=self.cliquerVector,state=DISABLED)
+        self.button_vectors=Button(self.frame2,bg=self.color_button,text="Save eigen vectors",font=("Helvetica"),command=self.cliquerVector,state=DISABLED)
         self.button_vectors.grid(row=3, column=1,pady=(10,20),padx=40,sticky=W)
 
 
@@ -176,22 +178,28 @@ class Interface(Frame):
     # Reduce the model
     def cliquerResult(self):
         global G
+        global work_folder
         try:
             G = reductionpy(filename)
-
-            # Enable network and simulation vizualisation
-            self.charge_network_reduced.configure(state=NORMAL)
-            self.charge_reduced_simulation.configure(state=NORMAL)
-            self.button_vectors.configure(state=NORMAL)
         except:
             showwarning(message='An error occured when reducing model', )
+
+                # Enable network and simulation vizualisation
+        self.charge_network_reduced.configure(state=NORMAL)
+        self.charge_reduced_simulation.configure(state=NORMAL)
+        self.button_vectors.configure(state=NORMAL)
+        work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+        #save reduced model
+        lnetreduce.save_graph( G[1], '%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))   
+        
 
 
     def cliquerSimulationReduced(self):
 
         global Timescale_value
         Timescale_value=5
-        imageo = simulatepy(filename+"_reduced.tsv", Timescale_value)
+        print ('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
+        imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), Timescale_value)
         #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
         self.result=Toplevel(master=fenetre)
         self.result.title("Reduced model simulation")
@@ -221,9 +229,8 @@ class Interface(Frame):
 
 
     def cliquerChangeTimescaleReduced(self):
-        #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
         if self.result.Entry_number.get()!="":
-            imageo = simulatepy(filename+"_reduced.tsv", self.result.Entry_number.get())
+            imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), self.result.Entry_number.get())
             resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
             self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
             self.result.canva.image=resultsimu
@@ -249,10 +256,6 @@ class Interface(Frame):
         self.networkInitWindow.Layout_CB=ttk.Combobox(master=self.networkInitWindow.frameOption,textvariable="LayoutValueInit",values=["neato","dot","twopi","circo","fdp"])
         self.networkInitWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
 
-
-
-
-
         self.networkInitWindow.GoButton=Button(master=self.networkInitWindow.frameOption, text="Vizualise",command=self.cliquerChangeLayout,bg=self.color_button)
         self.networkInitWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
@@ -271,7 +274,7 @@ class Interface(Frame):
         self.networkInitWindow.SaveButton=Button(master=self.networkInitWindow.frameSave, text="Save",command=self.cliquerFolder,bg=self.color_button)
         self.networkInitWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["dot","pdf","png","svg"])
+        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["pdf","png","svg"])
         self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameSave,text="Format :",bg=self.color)
@@ -321,7 +324,7 @@ class Interface(Frame):
 
     def cliquerNetwork_reduced(self):
         LayoutValue='dot'
-        u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
+        u_G = lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
         rsavename = filename + "reduced_graph" + ".png"
         imageo = draw_graph(u_G,'neato',False,None)
 
@@ -337,9 +340,6 @@ class Interface(Frame):
 
         self.networkReducedWindow.Layout_CB=ttk.Combobox(master=self.networkReducedWindow.frameOption,textvariable="LayoutValue",values=["neato","dot","twopi","circo","fdp"])
         self.networkReducedWindow.Layout_CB.grid(row=1, column=2,pady=(10,20),padx=40,)
-        
-
-
 
         self.networkReducedWindow.GoButton=Button(master=self.networkReducedWindow.frameOption, text="Vizualise",command=self.cliquerChangeLayout_reduced,bg=self.color_button)
         self.networkReducedWindow.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
@@ -359,7 +359,7 @@ class Interface(Frame):
         self.networkReducedWindow.SaveButton=Button(master=self.networkReducedWindow.frameSave, text="Save",command=self.cliquerFolderReduced,bg=self.color_button)
         self.networkReducedWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["dot","pdf","png","svg"])        
+        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["pdf","png","svg"])        
         self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameSave,text="Format :",bg=self.color)
@@ -368,7 +368,7 @@ class Interface(Frame):
 
     def cliquerChangeLayout_reduced(self):
         #os.system("python3 simulate.py "+filename+"_reduced.tsv "+self.result.Entry_number.get())
-        u_G = lnetreduce.load_graph('%s_reduced.tsv' % filename)
+        u_G = lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
 
         if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
             layout = self.networkReducedWindow.Layout_CB.get()
@@ -395,7 +395,7 @@ class Interface(Frame):
                 format = self.networkReducedWindow.Format_CB.get()   
                 self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
                 savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
-                u_G=lnetreduce.load_graph('%s_reduced.tsv' % filename)
+                u_G=lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
                 layout = self.networkReducedWindow.Layout_CB.get()
                 draw_graph(u_G,layout,True,savename) 
 
@@ -425,10 +425,10 @@ def reductionpy(filename):
     try:
         u_G = lnetreduce.reduce_graph( input_G )
     except:
-        print( "Sorry, this instance is not reducible because its reduced form has non separated reaction speeds" )
+        showwarning(message='Sorry, this instance is not reducible because its reduced form has non separated reaction speeds')
         sys.exit()
 
-    lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
+    #lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
     return input_G, u_G
 
 def simulatepy(_filename, _timescale):
