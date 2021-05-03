@@ -130,10 +130,10 @@ class Interface(Frame):
         global Timescale_value_init
         Timescale_value_init=5
 
-        imageo = simulatepy(filename, Timescale_value_init)
+        imageo = simulatepy(filename, Timescale_value_init, method=None)
 
         #change timescale block
-        self.resultInit=Toplevel(master=fenetre)
+        self.resultInit=Toplevel(master=fenetre,bg="white")
         self.resultInit.title("Initial model simulation")
 
         self.resultInit.frameOption=Frame(master=self.resultInit,bg=self.color)
@@ -144,12 +144,21 @@ class Interface(Frame):
 
         self.resultInit.Entry_number=Entry(master=self.resultInit.frameOption,textvariable="Timescale_value_init")
         self.resultInit.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
+        
+
+        self.resultInit.solverOption=Label(master=self.resultInit.frameOption,text="Solver :",bg=self.color)
+        self.resultInit.solverOption.grid(row=2, column=1,pady=(10,20),padx=40,)
+
+        self.resultInit.Solver=ttk.Combobox(master=self.resultInit.frameOption,textvariable="SolverValueInit",values=["LSODA","odeint"])
+        self.resultInit.Solver.set('LSODA')
+        self.resultInit.Solver.grid(row=2, column=2,pady=(10,20),padx=40,)
+
 
         self.resultInit.GoButton=Button(master=self.resultInit.frameOption, text="Start",command=self.cliquerChangeTimescale,bg=self.color_button)
-        self.resultInit.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+        self.resultInit.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
         #visualization block
-        self.resultInit.frameImage=Frame(master=self.resultInit)
+        self.resultInit.frameImage=Frame(master=self.resultInit,bg="white")
         self.resultInit.frameImage.pack()
 
         resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
@@ -162,15 +171,29 @@ class Interface(Frame):
     def cliquerChangeTimescale(self):
         
         #os.system("python3 simulate.py "+filename+" "+self.resultInit.Entry_number.get())
-        print( self.resultInit.Entry_number.get())
-        if self.resultInit.Entry_number.get()!="":
-            imageo = simulatepy(filename, self.resultInit.Entry_number.get())
+        
+        if self.resultInit.Entry_number.get()!="" and self.resultInit.Entry_number.get().isdigit() and self.resultInit.Solver.get() in ["LSODA","odeint"]:
+            if self.resultInit.Solver.get()=='LSODA':
+                imageo = simulatepy(filename, self.resultInit.Entry_number.get(),method=None)
 
-            resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-        
-            self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
-            self.resultInit.canva.image=resultsimu
-        
+                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+            
+                self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
+                self.resultInit.canva.image=resultsimu
+            elif self.resultInit.Solver.get()=='odeint':
+                imageo = simulatepy(filename, self.resultInit.Entry_number.get(),method='odeint')
+
+                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+            
+                self.resultInit.canva.create_image(0,0,anchor=NW,image=resultsimu)
+                self.resultInit.canva.image=resultsimu
+                
+            else:
+                showwarning(message="please choose a solver in the list ")                
+
+        else:
+            showwarning(message="please enter a positive integer as power of ten for timescale value ")
+       
 
 
         
@@ -198,8 +221,8 @@ class Interface(Frame):
 
         global Timescale_value
         Timescale_value=5
-        print ('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
-        imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), Timescale_value)
+        
+        imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), Timescale_value,method=None)
         #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
         self.result=Toplevel(master=fenetre)
         self.result.title("Reduced model simulation")
@@ -215,8 +238,15 @@ class Interface(Frame):
         self.result.Entry_number=Entry(master=self.result.frameOption,textvariable=Timescale_value)
         self.result.Entry_number.grid(row=1, column=2,pady=(10,20),padx=40,)
 
+        self.result.solverOption=Label(master=self.result.frameOption,text="Solver :",bg=self.color)
+        self.result.solverOption.grid(row=2, column=1,pady=(10,20),padx=40,)
+
+        self.result.Solver=ttk.Combobox(master=self.result.frameOption,textvariable="SolverValueInit",values=["LSODA","odeint"])
+        self.result.Solver.set('LSODA')
+        self.result.Solver.grid(row=2, column=2,pady=(10,20),padx=40,)
+
         self.result.GoButton=Button(master=self.result.frameOption, text="Start",command=self.cliquerChangeTimescaleReduced,bg=self.color_button)
-        self.result.GoButton.grid(row=2, column=2,pady=(10,20),padx=40,sticky=W)
+        self.result.GoButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
         self.result.frameImage=Frame(master=self.result)
         self.result.frameImage.pack()
@@ -229,11 +259,29 @@ class Interface(Frame):
 
 
     def cliquerChangeTimescaleReduced(self):
-        if self.result.Entry_number.get()!="":
-            imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), self.result.Entry_number.get())
-            resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-            self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
-            self.result.canva.image=resultsimu
+        if self.result.Entry_number.get()!="" and self.result.Entry_number.get().isdigit() and self.result.Solver.get() in ["LSODA","odeint"]:
+            if self.result.Solver.get()=='LSODA':
+                imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), self.result.Entry_number.get(),method=None)
+                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+                self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
+                self.result.canva.image=resultsimu
+            elif self.result.Solver.get()=='odeint':
+                imageo = simulatepy(filename, self.result.Entry_number.get(),method='odeint')
+
+                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+            
+                self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
+                self.result.canva.image=resultsimu
+            else:
+                showwarning(message="please choose a solver in the list ")                
+
+        else:
+            showwarning(message="please enter a positive integer as power of ten for timescale value ")
+
+
+
+        
+
 
     def cliquerNetwork(self):
         global Layout
@@ -431,10 +479,10 @@ def reductionpy(filename):
     #lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
     return input_G, u_G
 
-def simulatepy(_filename, _timescale):
+def simulatepy(_filename, _timescale,method):
     timescale = int(_timescale)
     fig = plt.figure()
-    lnetreduce.simulate_and_plot(_filename, timescale)
+    lnetreduce.simulate_and_plot(_filename, timescale,method=method)
     return fig_to_image(fig)
 
 def fig_to_image(fig, buffer=False,save=None):
