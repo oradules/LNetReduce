@@ -205,6 +205,7 @@ class Interface(Frame):
         try:
             G = reductionpy(filename)
         except:
+            G = reductionpy(filename)
             showwarning(message='An error occured when reducing model', )
 
                 # Enable network and simulation vizualisation
@@ -221,9 +222,7 @@ class Interface(Frame):
 
         global Timescale_value
         Timescale_value=5
-        
         imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), Timescale_value,method=None)
-        #os.system("python3 simulate.py "+filename+"_reduced.tsv 5")
         self.result=Toplevel(master=fenetre)
         self.result.title("Reduced model simulation")
         
@@ -473,8 +472,13 @@ def reductionpy(filename):
     try:
         u_G = lnetreduce.reduce_graph( input_G )
     except:
-        showwarning(message='Sorry, this instance is not reducible because its reduced form has non separated reaction speeds')
-        sys.exit()
+        try:
+            u_G = lnetreduce.reduce_graph( input_G ,partial=True)
+            showwarning(message='Failed to completely reduce the model, a partially reduced model have been generated')
+
+        except:
+            showwarning(message='Sorry, this instance is not reducible because its reduced form has non separated reaction speeds')
+            sys.exit()
 
     #lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
     return input_G, u_G
