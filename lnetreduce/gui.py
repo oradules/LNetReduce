@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter.messagebox import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+import PIL
 from matplotlib import pyplot as plt
 import numpy as np
 import tempfile
@@ -62,7 +63,7 @@ class Interface(Frame):
 
 
         self.charge_network = Button(self.frame1, text="Vizualise network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
-        self.charge_network.grid(row=1, column=1,pady=(20,10),padx=40)
+        self.charge_network.grid(row=1, column=1,pady=(20,10),padx=40,sticky=W)
 
         
         self.charge_simulation = Button(self.frame1, text="Simulation", command=self.cliquerSimulation,font=("Helvetica"),bg=self.color_button,state=DISABLED)
@@ -125,14 +126,18 @@ class Interface(Frame):
         except:
             showwarning(message='An error occured loading the model, \n please check format', )
 
+        ################################################################################################################
+        # Simulation part
+        ################################################################################################################ 
 
     def cliquerSimulation(self):
         global Timescale_value_init
+        global imageo
+        global resultsimu
         Timescale_value_init=5
 
         imageo = simulatepy(filename, Timescale_value_init, method=None)
 
-        #change timescale block
         self.resultInit=Toplevel(master=fenetre,bg="white")
         self.resultInit.title("Initial model simulation")
 
@@ -167,11 +172,18 @@ class Interface(Frame):
         self.resultInit.canva.image=resultsimu
         self.resultInit.canva.pack(fill=BOTH)
 
+        self.resultInit.frameSave=Frame(master=self.resultInit,bg=self.color)
+        self.resultInit.frameSave.pack(fill=BOTH)
 
-    def cliquerChangeTimescale(self):
-        
-        #os.system("python3 simulate.py "+filename+" "+self.resultInit.Entry_number.get())
-        
+        self.resultInit.Format_CB=ttk.Combobox(master=self.resultInit.frameSave,textvariable="FormatValueInit",values=["pdf","png"])
+        self.resultInit.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
+        self.resultInit.SaveButton=Button(master=self.resultInit.frameSave, text="Save",command=self.saveInitSiumulation,bg=self.color_button)
+        self.resultInit.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
+
+
+    def cliquerChangeTimescale(self):   
+        global resultsimu 
         if self.resultInit.Entry_number.get()!="" and self.resultInit.Entry_number.get().isdigit() and self.resultInit.Solver.get() in ["LSODA","odeint"]:
             if self.resultInit.Solver.get()=='LSODA':
                 imageo = simulatepy(filename, self.resultInit.Entry_number.get(),method=None)
@@ -195,6 +207,24 @@ class Interface(Frame):
             showwarning(message="please enter a positive integer as power of ten for timescale value ")
        
 
+    def saveInitSiumulation(self):
+        format = self.resultInit.Format_CB.get()   
+        self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+        savename = self.work_folder+"/"+basename(filename) + "input_model_simulation." + self.resultInit.Format_CB.get()
+
+        if self.resultInit.Format_CB.get() =="png":
+            SimuToSave= ImageTk.getimage(resultsimu)
+            
+            SimuToSave.save(savename)
+            #simulatepy(filename, self.resultInit.Entry_number.get(),meth)
+
+        elif self.resultInit.Format_CB.get()=="pdf":
+            SimuToSave= ImageTk.getimage(resultsimu)
+            SimuToSave=SimuToSave.convert('RGB')
+            SimuToSave.save(savename)
+
+        else:
+            showwarning(message='Please select a correct format', )
 
         
         
@@ -221,6 +251,7 @@ class Interface(Frame):
     def cliquerSimulationReduced(self):
 
         global Timescale_value
+        global resultsimureduced
         Timescale_value=5
         imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), Timescale_value,method=None)
         self.result=Toplevel(master=fenetre)
@@ -250,27 +281,37 @@ class Interface(Frame):
         self.result.frameImage=Frame(master=self.result)
         self.result.frameImage.pack()
 
-        resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-        self.result.canva=Canvas(self.result.frameImage,width=resultsimu.width(),height=resultsimu.height())
-        self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
-        self.result.canva.image=resultsimu
+        resultsimureduced= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+        self.result.canva=Canvas(self.result.frameImage,width=resultsimureduced.width(),height=resultsimureduced.height())
+        self.result.canva.create_image(0,0,anchor=NW,image=resultsimureduced)
+        self.result.canva.image=resultsimureduced
         self.result.canva.pack(fill=BOTH)
+
+        self.result.frameSave=Frame(master=self.result,bg=self.color)
+        self.result.frameSave.pack(fill=BOTH)
+
+        self.result.Format_CB=ttk.Combobox(master=self.result.frameSave,textvariable="FormatValueReduced",values=["pdf","png"])
+        self.result.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
+
+        self.result.SaveButton=Button(master=self.result.frameSave, text="Save",command=self.saveReducedSiumulation,bg=self.color_button)
+        self.result.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 
     def cliquerChangeTimescaleReduced(self):
+        global resultsimureduced
         if self.result.Entry_number.get()!="" and self.result.Entry_number.get().isdigit() and self.result.Solver.get() in ["LSODA","odeint"]:
             if self.result.Solver.get()=='LSODA':
                 imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), self.result.Entry_number.get(),method=None)
-                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
-                self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
-                self.result.canva.image=resultsimu
+                resultsimureduced= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+                self.result.canva.create_image(0,0,anchor=NW,image=resultsimureduced)
+                self.result.canva.image=resultsimureduced
             elif self.result.Solver.get()=='odeint':
                 imageo = simulatepy(filename, self.result.Entry_number.get(),method='odeint')
 
-                resultsimu= ImageTk.PhotoImage(imageo,width=1000,height=1200)
+                resultsimureduced= ImageTk.PhotoImage(imageo,width=1000,height=1200)
             
                 self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
-                self.result.canva.image=resultsimu
+                self.result.canva.image=resultsimureduced
             else:
                 showwarning(message="please choose a solver in the list ")                
 
@@ -278,7 +319,28 @@ class Interface(Frame):
             showwarning(message="please enter a positive integer as power of ten for timescale value ")
 
 
+    def saveReducedSiumulation(self):
+            format = self.result.Format_CB.get()   
+            self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+            savename = self.work_folder+"/"+basename(filename) + "input_model_simulation." + self.result.Format_CB.get()
+            
 
+            if self.result.Format_CB.get() =="png":
+                SimuToSave= ImageTk.getimage(resultsimureduced)               
+                SimuToSave.save(savename)           
+
+            elif self.result.Format_CB.get()=="pdf":
+                SimuToSave= ImageTk.getimage(resultsimureduced)
+                SimuToSave=SimuToSave.convert('RGB')
+                SimuToSave.save(savename)
+
+            else:
+                showwarning(message='Please select a correct format', )
+
+
+        ################################################################################################################
+        # Network Part
+        ################################################################################################################ 
         
 
 
@@ -483,11 +545,11 @@ def reductionpy(filename):
     #lnetreduce.save_graph( u_G, '%s_reduced.tsv' % filename)
     return input_G, u_G
 
-def simulatepy(_filename, _timescale,method):
+def simulatepy(_filename, _timescale,method,path=None):
     timescale = int(_timescale)
     fig = plt.figure()
     lnetreduce.simulate_and_plot(_filename, timescale,method=method)
-    return fig_to_image(fig)
+    return fig_to_image(fig,save=path)
 
 def fig_to_image(fig, buffer=False,save=None):
     if buffer:
