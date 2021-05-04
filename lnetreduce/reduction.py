@@ -2,6 +2,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import graphviz as gv
+import pygraphviz as pgv
 
 def load( filename):
     "Load a weighted graph from a file where each line encodes an arc as a triplet (source;target;weight)."
@@ -281,32 +283,19 @@ def reduce_graph( G, debug=False, partial=False ):
     "Reduce the graph if timescales are properly separated"
     return unglue_stack( glue(G, debug=debug, partial=partial), debug=debug )
 
-
-def plot_graph(G, node_color='lightgray', edge_color='black', edge_labels=None, layout='neato', curve=False, save=None):
-    node_names = [ n for n in G ]
-    if isinstance(layout, str):
-        pos = nx.nx_pydot.graphviz_layout(G, prog=layout)
-    else:
-        pos = layout
-    params = {
-        'with_labels':True,
-        'node_color': node_color,
-        'font_size':20, 
-        'node_size':1000,
-        'arrowsize':30,
-        'arrowstyle':'->',
-    }
-    if curve:
-        params['connectionstyle'] = 'arc3,rad=0.2'
-    nx.draw(G, pos, **params)
-    if edge_labels:
-        if edge_labels is True:
-            edge_labels = 'weight'
-        if isinstance(edge_labels, str):
-            edge_labels = nx.get_edge_attributes(G, edge_labels)
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color=edge_color, label_pos=0.65, font_size=16)
-    
-    return pos
+def plot_graph(G, layout='dot', path=None, format=None):
+    AG = nx.nx_agraph.to_agraph(G)
+    LE = AG.edges()
+    for a,b in LE:
+        AG.remove_edge(u=a,v=b)
+    for c,d,w in G.edges(data=True):
+        AG.add_edge(u=c,v=d, label=w['weight'])
+    #AG.draw(path=file,format=format,prog=layout,args="-Nheight=0.3 -Nwidth=0.3")
+    GA = AG.string()
+    gg = gv.Source(GA, engine=layout, format=format)
+    if path!=None:
+        gg.render(path, view=False, format=format, cleanup=True)
+    return gg
 
 def permute_timescales(G):
     edge_labels = nx.get_edge_attributes(G, 'weight')

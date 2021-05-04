@@ -178,7 +178,7 @@ class Interface(Frame):
         self.resultInit.Format_CB=ttk.Combobox(master=self.resultInit.frameSave,textvariable="FormatValueInit",values=["pdf","png"])
         self.resultInit.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
-        self.resultInit.SaveButton=Button(master=self.resultInit.frameSave, text="Save",command=self.saveInitSiumulation,bg=self.color_button)
+        self.resultInit.SaveButton=Button(master=self.resultInit.frameSave, text="Save",command=self.saveInitSimulation,bg=self.color_button)
         self.resultInit.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 
@@ -207,10 +207,10 @@ class Interface(Frame):
             showwarning(message="please enter a positive integer as power of ten for timescale value ")
        
 
-    def saveInitSiumulation(self):
+    def saveInitSimulation(self):
         format = self.resultInit.Format_CB.get()   
         self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-        savename = self.work_folder+"/"+basename(filename) + "input_model_simulation." + self.resultInit.Format_CB.get()
+        savename = self.work_folder+"/"+basename(filename) + "_input_model_simulation." + self.resultInit.Format_CB.get()
 
         if self.resultInit.Format_CB.get() =="png":
             SimuToSave= ImageTk.getimage(resultsimu)
@@ -293,7 +293,7 @@ class Interface(Frame):
         self.result.Format_CB=ttk.Combobox(master=self.result.frameSave,textvariable="FormatValueReduced",values=["pdf","png"])
         self.result.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
-        self.result.SaveButton=Button(master=self.result.frameSave, text="Save",command=self.saveReducedSiumulation,bg=self.color_button)
+        self.result.SaveButton=Button(master=self.result.frameSave, text="Save",command=self.saveReducedSimulation,bg=self.color_button)
         self.result.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
 
@@ -319,10 +319,10 @@ class Interface(Frame):
             showwarning(message="please enter a positive integer as power of ten for timescale value ")
 
 
-    def saveReducedSiumulation(self):
+    def saveReducedSimulation(self):
             format = self.result.Format_CB.get()   
             self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-            savename = self.work_folder+"/"+basename(filename) + "input_model_simulation." + self.result.Format_CB.get()
+            savename = self.work_folder+"/"+basename(filename) + "_reduced_model_simulation." + self.result.Format_CB.get()
             
 
             if self.result.Format_CB.get() =="png":
@@ -349,8 +349,8 @@ class Interface(Frame):
         LayoutValue='dot'
         FormatValue='png'
         input_G = lnetreduce.load_graph(filename)
-        savename = filename + "input_graph" + "." + FormatValue
-        imageo = draw_graph(input_G,'neato',True,None)
+        #savename = filename + "_input_graph" + "." + FormatValue
+        imageo = draw_graph(input_G,LayoutValue,None,FormatValue)
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
         
@@ -383,7 +383,7 @@ class Interface(Frame):
         self.networkInitWindow.SaveButton=Button(master=self.networkInitWindow.frameSave, text="Save",command=self.cliquerFolder,bg=self.color_button)
         self.networkInitWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["pdf","png","svg"])
+        self.networkInitWindow.Format_CB=ttk.Combobox(master=self.networkInitWindow.frameSave,textvariable="FormatValueInit",values=["dot","pdf","png","svg"])
         self.networkInitWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkInitWindow.formatOption=Label(master=self.networkInitWindow.frameSave,text="Format :",bg=self.color)
@@ -395,13 +395,13 @@ class Interface(Frame):
         format='png'
         if self.networkInitWindow.Format_CB.get()!="":
             format = self.networkInitWindow.Format_CB.get()
-        layout='neato'
+        layout='dot'
         if self.networkInitWindow.Layout_CB.get()!="":
             layout = self.networkInitWindow.Layout_CB.get()
-        savename = filename + "input_graph" + "." + format
+        #savename = filename + "_input_graph" + "." + format
 
         
-        imageo=draw_graph(input_G,layout,True,None)
+        imageo=draw_graph(input_G,layout,None,format)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
@@ -418,11 +418,11 @@ class Interface(Frame):
             if self.networkInitWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
                 format = self.networkInitWindow.Format_CB.get()   
                 self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-                savename = self.work_folder+"/"+basename(filename) + "input_graph." + self.networkInitWindow.Format_CB.get()
-                input_G = lnetreduce.load_graph("models/flower_2.csv")
+                savename = self.work_folder+"/"+basename(filename) + "_input_graph"#." + self.networkInitWindow.Format_CB.get()
+                input_G = lnetreduce.load_graph(filename)
 
                 layout = self.networkInitWindow.Layout_CB.get()
-                draw_graph(input_G,layout,True,savename)
+                fp = save_draw_graph(input_G,layout,savename,format)
             else:
                 showwarning(message='Please select an existing layout', )
              
@@ -434,8 +434,8 @@ class Interface(Frame):
     def cliquerNetwork_reduced(self):
         LayoutValue='dot'
         u_G = lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
-        rsavename = filename + "reduced_graph" + ".png"
-        imageo = draw_graph(u_G,'neato',False,None)
+        #rsavename = filename + "reduced_graph" + ".png"
+        imageo = draw_graph(u_G,LayoutValue,None,'png')
 
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
@@ -468,7 +468,7 @@ class Interface(Frame):
         self.networkReducedWindow.SaveButton=Button(master=self.networkReducedWindow.frameSave, text="Save",command=self.cliquerFolderReduced,bg=self.color_button)
         self.networkReducedWindow.SaveButton.grid(row=3, column=2,pady=(10,20),padx=40,sticky=W)
 
-        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["pdf","png","svg"])        
+        self.networkReducedWindow.Format_CB=ttk.Combobox(master=self.networkReducedWindow.frameSave,textvariable="FormatValue",values=["dot","pdf","png","svg"])        
         self.networkReducedWindow.Format_CB.grid(row=2, column=2,pady=(10,20),padx=40,)
 
         self.networkReducedWindow.formatOption=Label(master=self.networkReducedWindow.frameSave,text="Format :",bg=self.color)
@@ -482,7 +482,7 @@ class Interface(Frame):
         if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
             layout = self.networkReducedWindow.Layout_CB.get()
         
-            imageo=draw_graph(u_G,layout,False,None)
+            imageo = draw_graph(u_G,layout,None,'png')
 
             resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
@@ -503,10 +503,10 @@ class Interface(Frame):
             if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
                 format = self.networkReducedWindow.Format_CB.get()   
                 self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-                savename = self.work_folder+"/"+basename(filename) + "reduced_graph" + "." + format 
+                savename = self.work_folder+"/"+basename(filename) + "_reduced_graph"# + "." + format 
                 u_G=lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
                 layout = self.networkReducedWindow.Layout_CB.get()
-                draw_graph(u_G,layout,True,savename) 
+                fp = save_draw_graph(u_G,layout,savename,format) 
 
             else:
                 showwarning(message='Please select an existing layout', )
@@ -528,6 +528,21 @@ def generateVectors(savename):
     with open(savename+"left_vector.txt","w") as g:
         g.write(str(L))            
 
+def fig_to_image(fig, buffer=False,save=None):
+    if buffer:
+        io_buf = io.BytesIO()
+        fig.savefig(io_buf, format='raw')
+        io_buf.seek(0)
+        img = Image.fromarray( np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
+        newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1)) )
+        io_buf.close()
+        return img
+    # save and load from a tmp file
+    tf = tempfile.TemporaryFile(suffix='.png')
+    fig.savefig(tf, format='png')
+    if save!=None:
+        fig.savefig(save)
+    return Image.open(tf)
 
 def reductionpy(filename):
     input_G = lnetreduce.load_graph(filename)
@@ -551,27 +566,15 @@ def simulatepy(_filename, _timescale,method,path=None):
     lnetreduce.simulate_and_plot(_filename, timescale,method=method)
     return fig_to_image(fig,save=path)
 
-def fig_to_image(fig, buffer=False,save=None):
-    if buffer:
-        io_buf = io.BytesIO()
-        fig.savefig(io_buf, format='raw')
-        io_buf.seek(0)
-        img = Image.fromarray( np.reshape(np.frombuffer(io_buf.getvalue(), dtype=np.uint8),
-        newshape=(int(fig.bbox.bounds[3]), int(fig.bbox.bounds[2]), -1)) )
-        io_buf.close()
-        return img
-    # save and load from a tmp file
-    tf = tempfile.TemporaryFile(suffix='.png')
-    fig.savefig(tf, format='png')
-    if save!=None:
-        fig.savefig(save)
-    return Image.open(tf)
+def draw_graph(G, layout, path, format):
+    gg = lnetreduce.plot_graph(G, layout, path, format)
+    gr = gg.render(tempfile.TemporaryFile(suffix='.'+format).name)
+    return Image.open(gr)
 
-def draw_graph( G, layout,curve,path  ):
-    fig = plt.figure()
-    lnetreduce.plot_graph(G, edge_labels=True, curve=curve,layout=layout) 
-
-    return fig_to_image(fig,save=path)
+def save_draw_graph(G, layout, path, format):
+    gg = lnetreduce.plot_graph(G, layout, path, format)
+    #gr = gg.render(path, view=False, format=format)
+    return gg
 
 def launch_gui():
     global fenetre
