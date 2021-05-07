@@ -16,26 +16,35 @@ def save_graph(G, filename):
         f.write(b'source;target;weight\n')
         nx.readwrite.edgelist.write_weighted_edgelist(G, f, delimiter=';')
 
-def prune( G, debug=False, partial=False ):
-    """Given a digraph G, construct and return a pruned version of G
-       keeping only the single fastest out-going edge for each node""" 
+def prune( G, partial=False, debug=False ):
+    """Given a digraph G, construct and return a pruned subgraph of G
+       keeping only the single fastest out-going edge for each node.
+       
+       If the fastest out-going edge is not unique, this node can not be pruned. In this case
+       raise an error or return a partially pruned subgraph depending on the *partial* parameter""" 
     fastest_edge_list = []
     for node in G.nodes():
         edges = G.out_edges(node,data='weight')
-        if edges:
-            fastest = min( edges, key=lambda x:x[2] )
-            try:
-                check_unique(edges, fastest[2], debug)
-                fastest_edge_list.append(fastest)
-            except:
-                if not partial: raise
+        if not edges: continue
+        fastest = min( edges, key=lambda x:x[2] )
+        if partial:
+            wfast = fastest[2]
+            fast_edges = [ e for e in edges if e[2] == wfast ]
+            if len(fast_edges) > 1:
                 print("Fastest edge is not unique for ", node)
+                # FIXME: should we keep only the multiple fastest edges?
                 fastest_edge_list += edges
+            else:
+                fastest_edge_list += fast_edges
+        else:
+            check_unique(edges, fastest[2], debug)
+            fastest_edge_list.append(fastest)
+
+    # If nothing is pruned, return the original graph directly
+    if len(fastest_edge_list) == len(G.edges): return G
 
     #creates and returns the pruned graph out of the list of the fastest edges
-    pruned_G = nx.DiGraph()
-    pruned_G.add_weighted_edges_from(fastest_edge_list)
-    return pruned_G
+    return G.edge_subgraph( [ e[:2] for e in fastest_edge_list ])
 
 ############################### Restoring the out edges #######################
 #Returns the list of edges going out from a cycle of the pruned graph.
@@ -48,7 +57,7 @@ def cycle_out_edges( G, cycle, cycle_edges ):
     return [ e for e in J.edges(data='weight') if e[0] in cycle ]
 
 #Restores every edge going out of the cycles of the pruned graph.
-def restore_cycles_out_edges( G, pruned_G ):
+def restore_cycle_out_edges( G, pruned_G ):
     restored_G = pruned_G.copy()
     for cycle in nx.simple_cycles(pruned_G):
         H = G.subgraph(cycle)
@@ -135,18 +144,19 @@ def glue_graph( pruned_G, restored_G, debug=False, partial=False ):
             if not partial: raise
     return glued_G
 
+
 #Compute the pruned graph of G then restore the out edges of its cycles,
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
 #together with all its successive glued graphs (but not pruned).
-def glue( G, debug=False, partial=False ):
+def glue( G, partial=False, debug=False ):
     L = [ G ]
     while True:
         g_i = L[-1]
-        pruned_i = prune( g_i, partial=partial )
+        pruned_i = prune( g_i, partial=partial, debug=debug )
         cycles_i = list( nx.simple_cycles( pruned_i ) )
         if len(cycles_i) == 0: break
-        restored_i = restore_cycles_out_edges( g_i, pruned_i )
+        restored_i = restore_cycle_out_edges( g_i, pruned_i )
         glued = glue_graph( pruned_i, restored_i, debug=debug, partial=partial )
         if partial:
             # Check if some cycles have been glued
@@ -156,16 +166,12 @@ def glue( G, debug=False, partial=False ):
                 break
         L.append( glued )
 
-    L[0] = prune(G, partial=partial)
+    L[0] = prune(G, partial=partial, debug=debug)
     return L
 
 #Given a glued graph, returns the list of its glued nodes
 def glued_nodes_list( G ):
-    L = []
-    for node in G.nodes(data=True):
-        if node[1] != {}:
-            L.append(node[0])
-    return L
+    return [ node[0] for node in G.nodes(data=True) if node[1] ]
 
 # Unglue a graph step by step. At each step:
 # * restore cycle edges, except the limiting one (slowest, i.e. with highest weight)
@@ -279,9 +285,9 @@ def left_vector( G ):
                     break
     return M
 
-def reduce_graph( G, debug=False, partial=False ):
+def reduce_graph( G, partial=False, debug=False ):
     "Reduce the graph if timescales are properly separated"
-    return unglue_stack( glue(G, debug=debug, partial=partial), debug=debug )
+    return unglue_stack( glue(G, partial=partial, debug=debug), debug=debug )
 
 def plot_graph(G, layout='dot', path=None, format=None):
     AG = nx.nx_agraph.to_agraph(G)
