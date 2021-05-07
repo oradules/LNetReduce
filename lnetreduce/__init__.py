@@ -9,6 +9,7 @@ load_graph = reduction.load
 reduce_graph = reduction.reduce_graph
 save_graph = reduction.save_graph
 plot_graph = reduction.plot_graph
+save_plot_graph = reduction.save_plot_graph
 
 simulate = simulation.simulate
 simulate_and_plot = simulation.simulate_and_plot
