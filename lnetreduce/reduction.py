@@ -147,6 +147,7 @@ def glue_graph( pruned_G, restored_G, debug=False, partial=False ):
             if not partial: raise
     return glued_G
 
+
 #Compute the pruned graph of G then restore the out edges of its cycles,
 #then glue its cycles over and over again, until the resulting graph has no
 #simple cycle. Then returns the list composed of the original graph pruned
