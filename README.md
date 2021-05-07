@@ -58,7 +58,7 @@ Windows:
 
 3. Install [nextworkx](https://networkx.org/documentation/stable/install.html) and [pygraphviz](https://pygraphviz.github.io/documentation/stable/install.html)
 
-    1. Open a powershell (shift+right-clic on a window, or write powershell in your search space), then write **pip install numpy scipy pandas matplotlib networkx graphviz**
+    1. Open a powershell (shift+right-clic on a window, or write powershell in your search space), then write **pip install numpy scipy pandas matplotlib networkx**
     2. Then, write **pip install --global-option=build_ext --global-option="-IC:\Graphviz\include" --global-option="-LC:\Graphviz\lib" pygraphviz** if **C:\\** is the root where you have installed Graphviz.
 
 4. Install LNetReduce
