@@ -2,8 +2,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import graphviz as gv
+#import graphviz as gv
 import pygraphviz as pgv
+from IPython.display import Image as img
+from PIL import Image, ImageTk
+import io
 
 def load( filename):
     "Load a weighted graph from a file where each line encodes an arc as a triplet (source;target;weight)."
@@ -254,19 +257,45 @@ def reduce_graph( G, partial=False, debug=False ):
     glued = prune_and_glue_graph( G, partial=partial, debug=debug, recursive=True )
     return unglue_graph( glued, debug=debug )
 
-def plot_graph(G, layout='dot', path=None, format=None):
+#TODO : add a layout 'saved' that can be used to get the same node position between the input graph and the reduced graph.
+
+def plot_graph(G, layout='dot', saveLayout=False, notebook=True):
+    format='png'
+    path=None
     AG = nx.nx_agraph.to_agraph(G)
     LE = AG.edges()
     for a,b in LE:
         AG.remove_edge(u=a,v=b)
     for c,d,w in G.edges(data=True):
         AG.add_edge(u=c,v=d, label=w['weight'])
-    #AG.draw(path=file,format=format,prog=layout,args="-Nheight=0.3 -Nwidth=0.3")
-    GA = AG.string()
-    gg = gv.Source(GA, engine=layout, format=format)
-    if path!=None:
-        gg.render(path, view=False, format=format, cleanup=True)
-    return gg
+    AG.layout(layout,args="-Nheight=0.3 -Nwidth=0.3")
+    if notebook:
+        if layout=='neato':
+            return img(AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8"))
+        else:
+            return img(AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3"))
+    else:
+        if layout=='neato':
+            AGdraw = AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8")
+            AGdraw_io = io.BytesIO(AGdraw)
+            return Image.open(AGdraw_io)
+        else:
+            AGdraw = AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3")
+            AGdraw_io = io.BytesIO(AGdraw)
+            return Image.open(AGdraw_io)
+
+def save_plot_graph(G, path, format, layout='dot', saveLayout=False):
+    AG = nx.nx_agraph.to_agraph(G)
+    LE = AG.edges()
+    for a,b in LE:
+        AG.remove_edge(u=a,v=b)
+    for c,d,w in G.edges(data=True):
+        AG.add_edge(u=c,v=d, label=w['weight'])
+    AG.layout(layout,args="-Nheight=0.3 -Nwidth=0.3")
+    if layout=='neato':
+        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8")
+    else:
+        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3")
 
 def permute_timescales(G):
     edge_labels = nx.get_edge_attributes(G, 'weight')

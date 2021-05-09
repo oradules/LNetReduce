@@ -350,7 +350,7 @@ class Interface(Frame):
         FormatValue='png'
         input_G = lnetreduce.load_graph(filename)
         #savename = filename + "_input_graph" + "." + FormatValue
-        imageo = draw_graph(input_G,LayoutValue,None,FormatValue)
+        imageo = draw_graph(input_G,LayoutValue)
         self.networkInitWindow=Toplevel(master=fenetre,bg="white")
         self.networkInitWindow.title("Initial network")
         
@@ -393,15 +393,15 @@ class Interface(Frame):
     def cliquerChangeLayout(self):
         input_G = lnetreduce.load_graph(filename)
         format='png'
-        if self.networkInitWindow.Format_CB.get()!="":
-            format = self.networkInitWindow.Format_CB.get()
+        #if self.networkInitWindow.Format_CB.get()!="":
+        #    format = self.networkInitWindow.Format_CB.get()
         layout='dot'
         if self.networkInitWindow.Layout_CB.get()!="":
             layout = self.networkInitWindow.Layout_CB.get()
         #savename = filename + "_input_graph" + "." + format
 
         
-        imageo=draw_graph(input_G,layout,None,format)
+        imageo=draw_graph(input_G,layout)
         resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkInitWindow.canva=Canvas(self.networkInitWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
 
@@ -418,11 +418,11 @@ class Interface(Frame):
             if self.networkInitWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
                 format = self.networkInitWindow.Format_CB.get()   
                 self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-                savename = self.work_folder+"/"+basename(filename) + "_input_graph"#." + self.networkInitWindow.Format_CB.get()
+                savename = self.work_folder+"/"+basename(filename) + "_input_graph" + "." + format
                 input_G = lnetreduce.load_graph(filename)
 
                 layout = self.networkInitWindow.Layout_CB.get()
-                fp = save_draw_graph(input_G,layout,savename,format)
+                fp = save_draw_graph(input_G,savename,format,layout)
             else:
                 showwarning(message='Please select an existing layout', )
              
@@ -435,7 +435,7 @@ class Interface(Frame):
         LayoutValue='dot'
         u_G = lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
         #rsavename = filename + "reduced_graph" + ".png"
-        imageo = draw_graph(u_G,LayoutValue,None,'png')
+        imageo = draw_graph(u_G,LayoutValue)
 
         self.networkReducedWindow=Toplevel(master=fenetre,bg="white")
         self.networkReducedWindow.title("Reduced network")
@@ -482,7 +482,7 @@ class Interface(Frame):
         if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
             layout = self.networkReducedWindow.Layout_CB.get()
         
-            imageo = draw_graph(u_G,layout,None,'png')
+            imageo = draw_graph(u_G,layout)
 
             resultNetwork= ImageTk.PhotoImage(imageo)
         #self.networkReducedWindow.canva=Canvas(self.networkReducedWindow.frameImage,width=resultNetwork.width(),height=resultNetwork.height())
@@ -503,10 +503,10 @@ class Interface(Frame):
             if self.networkReducedWindow.Layout_CB.get() in ["neato","dot","twopi","circo","fdp"]:
                 format = self.networkReducedWindow.Format_CB.get()   
                 self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-                savename = self.work_folder+"/"+basename(filename) + "_reduced_graph"# + "." + format 
+                savename = self.work_folder+"/"+basename(filename) + "_reduced_graph" + "." + format 
                 u_G=lnetreduce.load_graph('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]))
                 layout = self.networkReducedWindow.Layout_CB.get()
-                fp = save_draw_graph(u_G,layout,savename,format) 
+                fp = save_draw_graph(u_G,savename,format,layout) 
 
             else:
                 showwarning(message='Please select an existing layout', )
@@ -566,15 +566,14 @@ def simulatepy(_filename, _timescale,method,path=None):
     lnetreduce.simulate_and_plot(_filename, timescale,method=method)
     return fig_to_image(fig,save=path)
 
-def draw_graph(G, layout, path, format):
-    gg = lnetreduce.plot_graph(G, layout, path, format)
-    gr = gg.render(tempfile.TemporaryFile(suffix='.'+format).name)
-    return Image.open(gr)
+def draw_graph(G, layout, savelayout=False, notebook=False):
+    return lnetreduce.plot_graph(G, layout, savelayout, notebook)
+    #gr = gg.render(tempfile.TemporaryFile(suffix='.'+format).name)
+    #return Image.open(gr)
 
-def save_draw_graph(G, layout, path, format):
-    gg = lnetreduce.plot_graph(G, layout, path, format)
+def save_draw_graph(G, path, format, layout, savelayout=False):
+    return lnetreduce.save_plot_graph(G, path, format, layout, savelayout)
     #gr = gg.render(path, view=False, format=format)
-    return gg
 
 def launch_gui():
     global fenetre
