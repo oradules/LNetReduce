@@ -14,7 +14,7 @@ def load( filename):
     return nx.from_pandas_edgelist(df, edge_attr='weight', create_using=nx.DiGraph)
 
 def save_graph(G, filename):
-    "Save a graph to a file: list of edges in the format: 'source,target,weight'"
+    "Save a graph to a file: list of edges in the format: 'source;target;weight'"
     with open(filename, 'wb') as f:
         f.write(b'source;target;weight\n')
         nx.readwrite.edgelist.write_weighted_edgelist(G, f, delimiter=';')
@@ -49,9 +49,8 @@ def prune( G, partial=False, debug=False ):
     #creates and returns the pruned graph out of the list of the fastest edges
     return G.edge_subgraph( [ e[:2] for e in fastest_edge_list ])
 
-
-def prune_and_glue_graph( G, partial=False, debug=False, unglue=False, recursive=True ):
-    """Core part of the reduction: prune the graph and glue the resulting cycles.
+def reduce_graph( G, partial=False, debug=False, unglue=True, recursive=True ):
+    """Reduce the graph: iteratively prune the graph and glue the resulting cycles.
     
     * After gluing, each cycle is represented by the source node of its limiting step.
     * Edges entering the glued cycle in the pruned graph are conserved.
@@ -159,7 +158,7 @@ def prune_and_glue_graph( G, partial=False, debug=False, unglue=False, recursive
             
             mrepr,tgt,w = glued_nodes[src]
             rtgt = G.edges[(src,tgt)].get('glued_target')
-            if rtgt and rtgt != tgt:
+            if rtgt is not None and rtgt != tgt:
                 if debug: print('Merging a redirected edge (%s, %s / %s, %s) !' % (src, tgt, rtgt, w))
                 tgt = rtgt
             if mrepr != cur_repr:
@@ -170,11 +169,12 @@ def prune_and_glue_graph( G, partial=False, debug=False, unglue=False, recursive
         glued_G.nodes[cur_repr]['glued_cycles'] = cur_glued_cycle
 
 
-    if unglue:
-        glued_G = unglue_graph(glued_G, debug=debug)
-
     if recursive:
-        return prune_and_glue_graph( glued_G, partial=partial, debug=debug, recursive=True, unglue=unglue)
+        return reduce_graph( glued_G, partial=partial, debug=debug, recursive=True, unglue=unglue)
+
+    if unglue:
+        return unglue_graph(glued_G, debug=debug)
+
     return glued_G
 
 def unglue_graph(glued, debug=False):
@@ -251,11 +251,6 @@ def left_vector( G ):
                 else:
                     break
     return M
-
-def reduce_graph( G, partial=False, debug=False ):
-    "Reduce the graph if timescales are properly separated"
-    glued = prune_and_glue_graph( G, partial=partial, debug=debug, recursive=True )
-    return unglue_graph( glued, debug=debug )
 
 #TODO : add a layout 'saved' that can be used to get the same node position between the input graph and the reduced graph.
 
