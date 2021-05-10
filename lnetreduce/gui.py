@@ -32,19 +32,23 @@ class Interface(Frame):
         filename=StringVar()
         Timescale_value=IntVar()
 
-        Frame.__init__(self, fenetre, width=768, height=576,bg=self.color, **kwargs)
 
-        self.pack()
+        Frame.__init__(self, fenetre,bg=self.color, **kwargs,)
+
+        self.pack(expand=True)
+        #self.bind("<Configure>", self.on_resize)
+        self.height = self.winfo_reqheight()
+        self.width = self.winfo_reqwidth()
 
 
         self.title_label = Label(self, text="LNetReduce: \n tool for reducing linear reaction networks \n with separated time scales",font=("Helvetica",14),bg=self.color)
-        self.title_label.pack(pady=30,padx=30)
+        self.title_label.pack(pady=30,padx=30,expand=True)
 
         ################################################################################################################
         # Starting model part
         ################################################################################################################
         self.frame3=Label(self,bg=self.color,bd=5)
-        self.frame3.pack(fill=BOTH, pady=(30,0),padx=40)
+        self.frame3.pack(fill=BOTH, pady=(30,0),padx=40,expand=True)
 
         #Input file selection
         self.inputFile_label = Label(self.frame3, text="Choose model file :",font=("Helvetica"),bg=self.color)
@@ -59,7 +63,7 @@ class Interface(Frame):
 
         #starting model block
         self.frame1=LabelFrame(self,relief='groove',bg=self.color,bd=5,text="Starting model",font=("Helvetica",14))
-        self.frame1.pack(fill=BOTH, pady=(10,30),padx=40)
+        self.frame1.pack(fill=BOTH, pady=(10,30),padx=40, expand=True)
 
 
         self.charge_network = Button(self.frame1, text="Vizualise network", command=self.cliquerNetwork,font=("Helvetica"),bg=self.color_button,state=DISABLED)
@@ -72,7 +76,7 @@ class Interface(Frame):
 
 
         self.frame4=Label(self,bg=self.color,bd=5)
-        self.frame4.pack(fill=BOTH, pady=(10,30),padx=40)
+        self.frame4.pack(fill=BOTH, pady=(10,30),padx=40,expand=True )
 
 
         self.reduce = Button(self.frame4, text="Reduce model", command=self.cliquerResult,font=("Helvetica", 12,"bold"),bg=self.color_button,state=DISABLED)
@@ -97,6 +101,23 @@ class Interface(Frame):
 
         self.button_vectors=Button(self.frame2,bg=self.color_button,text="Save eigen vectors",font=("Helvetica"),command=self.cliquerVector,state=DISABLED)
         self.button_vectors.grid(row=3, column=1,pady=(10,20),padx=40,sticky=W)
+
+    def on_resize(self,event):
+        # determine the ratio of old width/height to new width/height
+        wscale = int(float(event.width)/self.width*768)
+        hscale = int(float(event.height)/self.height*576)
+        self.width = event.width
+        self.height = event.height
+        # resize the canvas 
+        self.config(width=self.width, height=self.height)
+        fenetre.config(width=self.width, height=self.height)
+        # rescale all the objects tagged with the "all" tag
+        #self.scale("all",0,0,wscale,hscale)
+        print (wscale)
+        self.frame2.config(width=wscale,height=hscale)
+        #self.inputFile_label.config(width=wscale,height=hscale)
+        #self.inputFile_button.config(width=wscale,height=hscale)
+        #self.labelFile.config(width=wscale,height=hscale)
 
 
         ################################################################################################################
@@ -578,6 +599,7 @@ def launch_gui():
     fenetre = Tk()
     interface = Interface(fenetre)
     fenetre.title("LNetReduce")
+    fenetre.resizable(height = True, width =True)
     interface.mainloop()
 
 
