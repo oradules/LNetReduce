@@ -46,9 +46,7 @@ First install and setup a conda distribution: if you don't already have one.
 See instructions on the [miniconda website](https://conda.io/miniconda).
 
 Then create an environment for LNetreduce with all required dependencies by running the 
-following command in the LNetReduce folder:
-
-```conda env create -f environment. yml```.
+following command in the LNetReduce folder: ```conda env create -f environment. yml```.
 
 
 
