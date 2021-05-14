@@ -26,7 +26,8 @@ The (partially) reduced model can be saved using the same format as the input mo
 ## Simulation 
 
 * Both full and reduced models can be simulated. 
-* Chose a positive integer for the timescale, e.g. timescale = 1 if you want to simulate between 0 and 10^1. 
+* Chose a positive integer for the timescale, e.g. timescale = 1 if you want to simulate between 0 and 10^1.
+* By default, the initial conditions are one for all nodes; changing the default will be possible in future versions  
 * The solution is plotted in semi-logarithmic scale starting with t=10^0.
 * The code uses stiff solvers but these may fail for very stiff unreduced models; reduced models are less stiff and should pose no problems. 
 * The reduced model has multi-scale validity, i.e. the solutions computed with the reduced model approximate those computed with the full model at all time scales.
