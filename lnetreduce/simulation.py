@@ -12,7 +12,7 @@ def load(filename):
 def graph_to_sim(G):
     return [ np.asarray(A) for A in zip(*[ (a,b,c) for a,b,c in G.edges(data='weight') ])]
 
-def simulate(a, timescale, steps=1000, logx=True, method=None):
+def simulate(a, timescale, steps=1000, logx=True, method=None,initial_state=None):
     if isinstance(a, nx.Graph):
         a = graph_to_sim(a)
     elif isinstance(a, str):
@@ -51,7 +51,11 @@ def simulate(a, timescale, steps=1000, logx=True, method=None):
         S[index_target[i],i] =  1
 
     # initial state
-    x0 = np.ones( (n,) )
+    # initial state
+    if initial_state is None:
+        x0 = np.ones( (n,) )
+    else:
+        x0 = initial_state
 
     # construct the update function
     def dx_dt(t,x):
@@ -107,8 +111,8 @@ def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentr
     if title: plt.title(title)
 
 
-def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None):
-    sol = simulate(a, timescale, steps=steps, method=method)
+def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None, initial_state=None):
+    sol = simulate(a, timescale, steps=steps, method=method,initial_state=initial_state)
     plot_trace(sol.y, sol.t, sol.labels, title=title)
 
 if __name__ == "__main__":
