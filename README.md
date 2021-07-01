@@ -82,4 +82,9 @@ run ```python -m lnetreduce``` to launch the graphical interface.
 
 A Python API is also available, see the included jupyter-notebooks for examples.
 
+## Reference
+
+Marion Buffard, Aurélien Desoeuvres, Aurélien Naldi, Clément Requilé, Andrei Zinovyev, Ovidiu Radulescu.
+[LNetReduce: tool for reducing linear dynamic networks with separated time scales.](https://doi.org/10.1101/2021.05.11.443578)
+bioRxiv 2021.05.11.443578; doi:10.1101/2021.05.11.443578
 
