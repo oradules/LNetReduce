@@ -111,9 +111,9 @@ def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentr
     if title: plt.title(title)
 
 
-def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None, initial_state=None):
+def simulate_and_plot(a, timescale, steps=1000, save=None, method=None, title=None, initial_state=None,ylabel='concentration'):
     sol = simulate(a, timescale, steps=steps, method=method,initial_state=initial_state)
-    plot_trace(sol.y, sol.t, sol.labels, title=title)
+    plot_trace(sol.y, sol.t, sol.labels, title=title,ylabel=ylabel)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

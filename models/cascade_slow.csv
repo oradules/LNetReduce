@@ -1,0 +1,10 @@
+source;target;weight
+A;B;2
+B;A;4
+B;C;3
+C;D;8
+D;C;0
+D;E;5
+E;F;7
+F;E;1
+F;A;6
