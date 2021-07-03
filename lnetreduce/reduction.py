@@ -253,6 +253,7 @@ def left_vector( G ):
     return M
 
 #TODO : add a layout 'saved' that can be used to get the same node position between the input graph and the reduced graph.
+#TODO : when splines=true will be taken into account, add it in args.
 
 def plot_graph(G, layout='dot', saveLayout=False, notebook=True):
     format='png'
@@ -265,19 +266,11 @@ def plot_graph(G, layout='dot', saveLayout=False, notebook=True):
         AG.add_edge(u=c,v=d, label=w['weight'])
     AG.layout(layout,args="-Nheight=0.3 -Nwidth=0.3")
     if notebook:
-        if layout=='neato':
-            return img(AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8"))
-        else:
-            return img(AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3"))
+        return img(AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gnodesep=0.5 -Goverlap=false"))
     else:
-        if layout=='neato':
-            AGdraw = AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8")
-            AGdraw_io = io.BytesIO(AGdraw)
-            return Image.open(AGdraw_io)
-        else:
-            AGdraw = AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3")
-            AGdraw_io = io.BytesIO(AGdraw)
-            return Image.open(AGdraw_io)
+        AGdraw = AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gnodesep=0.5 -Goverlap=scale")
+        AGdraw_io = io.BytesIO(AGdraw)
+        return Image.open(AGdraw_io)
 
 def save_plot_graph(G, path, format, layout='dot', saveLayout=False):
     AG = nx.nx_agraph.to_agraph(G)
@@ -287,10 +280,7 @@ def save_plot_graph(G, path, format, layout='dot', saveLayout=False):
     for c,d,w in G.edges(data=True):
         AG.add_edge(u=c,v=d, label=w['weight'])
     AG.layout(layout,args="-Nheight=0.3 -Nwidth=0.3")
-    if layout=='neato':
-        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gsep=+8")
-    else:
-        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3")
+        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gnodesep=0.5 -Goverlap=scale")
 
 def permute_timescales(G):
     edge_labels = nx.get_edge_attributes(G, 'weight')
