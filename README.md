@@ -53,7 +53,7 @@ following command in the LNetReduce folder: ```conda env create -f environment. 
 
 After installing pip enter the the following command line to install all the needed packages:
 
-pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib
+```pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib```
 
 
 ### Manual installation on Windows
