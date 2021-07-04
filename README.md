@@ -49,6 +49,11 @@ See instructions on the [miniconda website](https://conda.io/miniconda).
 Then create an environment for LNetreduce with all required dependencies by running the 
 following command in the LNetReduce folder: ```conda env create -f environment. yml```.
 
+### Using pip
+
+After installing pip enter the the following command line to install all the needed packages:
+
+```pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib pygraphviz```
 
 
 ### Manual installation on Windows
