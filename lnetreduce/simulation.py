@@ -106,6 +106,7 @@ def plot_trace(trace, time, labels=None, logx=True, logy=False, ylabel='concentr
             plt.yscale('log')
     plt.grid()
     lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.subplots_adjust(right=0.7)
     plt.xlabel('time')
     plt.ylabel(ylabel)
     if title: plt.title(title)

@@ -34,7 +34,7 @@ class Interface(Frame):
 
         Frame.__init__(self, fenetre, width=768, height=576,bg=self.color, **kwargs)
 
-        self.pack()
+        self.pack(fill=BOTH,expand=True)
 
 
         self.title_label = Label(self, text="LNetReduce: \n tool for reducing linear reaction networks \n with separated time scales",font=("Helvetica",14),bg=self.color)
@@ -89,7 +89,7 @@ class Interface(Frame):
 
 
         self.charge_network_reduced = Button(self.frame2, text="Vizualise network", command=self.cliquerNetwork_reduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
-        self.charge_network_reduced.grid(row=1, column=1,pady=(20,10),padx=40)
+        self.charge_network_reduced.grid(row=1, column=1,pady=(20,10),padx=40,sticky=W)
         
         
         self.charge_reduced_simulation = Button(self.frame2, text="Simulation", command=self.cliquerSimulationReduced,font=("Helvetica"),bg=self.color_button,state=DISABLED)
