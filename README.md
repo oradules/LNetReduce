@@ -51,7 +51,9 @@ following command in the LNetReduce folder: ```conda env create -f environment. 
 
 ### Using pip
 
-After installing pip enter the the following command line to install all the needed packages:
+After installing pip enter the the following command lines to install all the needed packages:
+
+```apt-get install graphviz graphviz-dev```
 
 ```pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib pygraphviz```
 
