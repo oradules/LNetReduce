@@ -55,8 +55,13 @@ After installing pip enter the the following command lines to install all the ne
 
 ```apt-get install graphviz graphviz-dev```
 
-```pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib pygraphviz```
+```pip install --user networkx numpy scipy matplotlib ipython jupyter pandas sympy nose matplotlib pygraphviz Pillow```
 
+Then download the zip file and extract it where you want.
+
+If a problem occurs in the first use, try to upgrade the modules, e.g.:
+
+````pip intall --upgrade Pillow ipython```
 
 ### Manual installation on Windows
 
