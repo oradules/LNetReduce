@@ -280,7 +280,7 @@ def save_plot_graph(G, path, format, layout='dot', saveLayout=False):
     for c,d,w in G.edges(data=True):
         AG.add_edge(u=c,v=d, label=w['weight'])
     AG.layout(layout,args="-Nheight=0.3 -Nwidth=0.3")
-        return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gnodesep=0.5 -Goverlap=scale")
+    return AG.draw(path=path,format=format,args="-Nheight=0.3 -Nwidth=0.3 -Gnodesep=0.5 -Goverlap=scale")
 
 def permute_timescales(G):
     edge_labels = nx.get_edge_attributes(G, 'weight')
