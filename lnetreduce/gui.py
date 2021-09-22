@@ -306,11 +306,11 @@ class Interface(Frame):
                 self.result.canva.create_image(0,0,anchor=NW,image=resultsimureduced)
                 self.result.canva.image=resultsimureduced
             elif self.result.Solver.get()=='odeint':
-                imageo = simulatepy(filename, self.result.Entry_number.get(),method='odeint')
+                imageo = simulatepy('%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0]), self.result.Entry_number.get(),method='odeint')
 
                 resultsimureduced= ImageTk.PhotoImage(imageo,width=1000,height=1200)
             
-                self.result.canva.create_image(0,0,anchor=NW,image=resultsimu)
+                self.result.canva.create_image(0,0,anchor=NW,image=resultsimureduced)
                 self.result.canva.image=resultsimureduced
             else:
                 showwarning(message="please choose a solver in the list ")                
