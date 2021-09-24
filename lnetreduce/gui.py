@@ -515,17 +515,25 @@ class Interface(Frame):
             showwarning(message='Please select a correct format', )
 
     def cliquerVector(self):        
-    	self.work_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
-    	savename = self.work_folder+"/"+basename(filename) + "reduced" 
-    	generateVectors(savename)
+    	vector_folder =  filedialog.askdirectory(initialdir = "/HOME",title = "Select folder") 
+    	savename = '%s/%s_reduced.tsv' % (work_folder,basename(filename).split('.')[0])
+    	generateVectors(savename,vector_folder)
+    	print (savename)
 
-def generateVectors(savename):
+def generateVectors(savename,vector_folder):
+    u_G=lnetreduce.load_graph(savename)
+    R = lnetreduce.reduction.right_vector(u_G)
+    L = lnetreduce.reduction.left_vector(u_G)
+    with open(vector_folder+"/"+basename(filename).split('.')[0]+"right_vector_reduced.txt","w") as f:
+        f.write(str(R))
+    with open(vector_folder+"/"+basename(filename).split('.')[0]+"left_vector_reduced.txt","w") as g:
+        g.write(str(L))    
     u_G=lnetreduce.load_graph(filename)
     R = lnetreduce.reduction.right_vector(u_G)
     L = lnetreduce.reduction.left_vector(u_G)
-    with open(savename+"right_vector.txt","w") as f:
+    with open(vector_folder+"/"+basename(filename).split('.')[0]+"right_vector_initial.txt","w") as f:
         f.write(str(R))
-    with open(savename+"left_vector.txt","w") as g:
+    with open(vector_folder+"/"+basename(filename).split('.')[0]+"left_vector_initial.txt","w") as g:
         g.write(str(L))            
 
 def fig_to_image(fig, buffer=False,save=None):
